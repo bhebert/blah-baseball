@@ -11,11 +11,11 @@ class Player(Base):
     id = Column(Integer, primary_key=True)
     type = Column(String(20))
 
-    retrosheet_id = Column(String(20), unique=True)
-    mlb_id = Column(String(20), unique=True)
-    pecota_id = Column(String(20), unique=True)
-    fangraphs_id = Column(String(20), unique=True)
-    br_id = Column(String(20), unique=True)
+    retrosheet_id = Column(String(20))
+    mlb_id = Column(String(20))
+    pecota_id = Column(String(20))
+    fangraphs_id = Column(String(20))
+    br_id = Column(String(20))
 
     last_name = Column(String(50))
     first_name = Column(String(50))
@@ -37,7 +37,7 @@ class Batter(Player):
     }
 
     def __repr__(self):
-        return '<Batter %d (%s, %s)>' % (id, last_name, first_name)
+        return '<Batter %d (%s, %s)>' % (self.id, self.last_name, self.first_name)
 
 class Pitcher(Player):
 
@@ -50,7 +50,7 @@ class Pitcher(Player):
     }
 
     def __repr__(self):
-        return '<Pitcher %d (%s, %s)>' % (id, last_name, first_name)
+        return '<Pitcher %d (%s, %s)>' % (self.id, self.last_name, self.first_name)
 
 class ProjectionSystem(Base):
 
@@ -93,7 +93,7 @@ class BatterProjection(Base):
     sf = Column(Integer)
 
     def __repr__(self):
-        return '<BatterProjection %d>' % (id)
+        return '<BatterProjection %d>' % (self.id)
 
 class PitcherProjection(Base):
 
@@ -116,4 +116,4 @@ class PitcherProjection(Base):
     hbp = Column(Integer)
 
     def __repr__(self):
-        return '<PitcherProjection %d>' % (id)
+        return '<PitcherProjection %d>' % (self.id)
