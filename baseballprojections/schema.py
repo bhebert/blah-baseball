@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Boolean, Integer, Float, String, Date, ForeignKey
+from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import UniqueConstraint
@@ -64,8 +64,6 @@ class ProjectionSystem(Base):
     name = Column(String(20))
     year = Column(Integer)
     UniqueConstraint('name', 'year')
-    is_actual = Column(Boolean)
-
     batter_projections = relationship('BatterProjection')
     pitcher_projections = relationship('PitcherProjection')
 

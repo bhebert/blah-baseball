@@ -16,10 +16,10 @@ class ProjectionManager(object):
         self.session = Session()
         Base.metadata.create_all(self.engine)
 
-    def add_or_update_player(self, type, overwrite=False, retrosheet_id=None, 
-                             mlb_id=None, pecota_id=None, fangraphs_id=None, 
-                             br_id=None, last_name=None, first_name=None, 
-                             birthdate=None):
+    def add_or_update_player(self, player_type, overwrite=False, 
+                             retrosheet_id=None, mlb_id=None, pecota_id=None, 
+                             fangraphs_id=None, br_id=None, last_name=None, 
+                             first_name=None, birthdate=None):
         """
         Add a player to the database. If a player is already found with 
         matching ids, populate any missing non-id fields (overwrite=False) or 
@@ -32,9 +32,9 @@ class ProjectionManager(object):
         there is not exactly one match, raises an exception. 
         """
 
-        if type not in ('batter', 'pitcher'):
+        if player_type not in ('batter', 'pitcher'):
             raise Exception('Error: add_or_update_player must be called with '\
-                            'type = either "batter" or "pitcher"')
+                            'player_type = either "batter" or "pitcher"')
 
         matches = []
         id_fields = ['retrosheet_id', 'mlb_id', 'pecota_id', 'fangraphs_id', 'br_id']
@@ -68,7 +68,7 @@ class ProjectionManager(object):
                 if overwrite or getattr(match, field) is None:
                     setattr(match, field, value)
         else:
-            if type == 'batter':
+            if player_type == 'batter':
                 match = Batter(retrosheet_id=retrosheet_id, 
                                mlb_id=mlb_id,
                                pecota_id=pecota_id,
@@ -106,7 +106,7 @@ class ProjectionManager(object):
         due to nicknames, name changes, players with identical names, etc. If
         there is not exactly one match, raises an exception. 
         """
-        return self.add_or_update_player(self, type='batter', 
+        return self.add_or_update_player(player_type='batter', 
                                          overwrite=overwrite,
                                          retrosheet_id=retrosheet_id,
                                          mlb_id=mlb_id,
@@ -117,9 +117,10 @@ class ProjectionManager(object):
                                          first_name=first_name,
                                          birthdate=birthdate)
 
-    def add_or_update_pitcher(self, retrosheet_id=None, mlb_id=None, pecota_id=None, 
-                    fangraphs_id=None, br_id=None, last_name=None, 
-                    first_name=None, birthdate=None):
+    def add_or_update_pitcher(self, overwrite=False, retrosheet_id=None, 
+                              mlb_id=None, pecota_id=None, fangraphs_id=None, 
+                              br_id=None, last_name=None, first_name=None, 
+                              birthdate=None):
         """
         Add a pitcher to the database. If a pitcher is already found with 
         matching ids, populate any missing non-id fields (overwrite=False) or 
@@ -131,7 +132,7 @@ class ProjectionManager(object):
         due to nicknames, name changes, players with identical names, etc. If
         there is not exactly one match, raises an exception. 
         """
-        return self.add_or_update_player(self, type='pitcher', 
+        return self.add_or_update_player(player_type='pitcher', 
                                          overwrite=overwrite,
                                          retrosheet_id=retrosheet_id,
                                          mlb_id=mlb_id,
@@ -142,11 +143,12 @@ class ProjectionManager(object):
                                          first_name=first_name,
                                          birthdate=birthdate)
 
-    def add_projection_system(self, name, year):
+    def add_projection_system(self, name, year, is_actual):
         """
         Add a projection system to the database. 
         """
-        projection_system = ProjectionSystem(name=name, year=year)
+        projection_system = ProjectionSystem(name=name, year=year, 
+                                             is_actual=is_actual)
         self.session.add(projection_system)
         self.session.commit()
         return projection_system
@@ -212,15 +214,16 @@ class ProjectionManager(object):
         """
         return self.session.query(Player).filter_by(**kwargs)
 
-    def read_projection_csv(self, filename, projection_name, year, player_type,
-                            header_row, calculated_key={}, skip_rows=1, 
-                            verbose=False):
+    def read_projection_csv(self, filename, projection_name, year, is_actual,
+                            player_type, header_row, calculated_key={}, 
+                            skip_rows=1, verbose=False):
 
         if player_type not in ('batter', 'pitcher'):
             raise Exception('player_type is %s, must be either '\
                             '"batter" or "pitcher"' % player_type)
 
-        projection_system = self.add_projection_system(projection_name, year)
+        projection_system = self.add_projection_system(projection_name, year, 
+                                                       is_actual)
         reader = csv.reader(open(filename, 'r'))
         for i in range(skip_rows):
             reader.next()
@@ -245,8 +248,6 @@ class ProjectionManager(object):
                 projection_data['batter_id'] = player.id
                 projection_data['projection_system_id'] = projection_system.id
                 projection = self.add_batter_projection(**projection_data)
-                if verbose:
-                    print('%s, %s' % (player, projection))
 
             else:
                 player_data = { x: data[x] for x in add_pitcher_args if x in data }
@@ -259,143 +260,3 @@ class ProjectionManager(object):
 
             if verbose:
                 print('%s, %s' % (player, projection))
-
-    # PECOTA readers
-
-    def read_pecota_batters_2011(self, filename, verbose=False):
-
-        header_row = ['mlb_id', '', 'last_name', 'first_name', 'team', '', '', 
-                      '', '', '', '', 'birthdate', '', 'pa', 'ab', 'r', 'h1b', 
-                      'h2b', 'h3b', 'hr', 'rbi', 'bb', 'hbp', 'k', 'sb', 'cs', 
-                      'sac', 'sf']
-
-        calculated_key = {
-            'birthdate': lambda x: datetime.datetime.strptime(x['birthdate'], '%m/%d/%Y'),
-            'h': lambda x: sum(map(int, [x['h1b'], x['h2b'], x['h3b'], x['hr']])),
-        }
-        self.read_projection_csv(filename, 'pecota', 2011, 'batter',
-                                 header_row, calculated_key,
-                                 verbose=verbose)
-
-    def read_pecota_batters_2012(self, filename, verbose=False):
-
-        header_row = ['mlb_id', 'bp_id', 'last_name', 'first_name', '', '', '',
-                      '', '', '', 'team', '', '', '', 'pa', 'ab', 'r', 'h1b', 
-                      'h2b', 'h3b', 'hr', 'h', '', 'rbi', 'bb', 'hbp', 'k', 
-                      'sac', 'sf', '', 'sb', 'cs']
-        calculated_key = {}
-        self.read_projection_csv(filename, 'pecota', 2012, 'batter',
-                                 header_row, calculated_key,
-                                 verbose=verbose)
-
-    def read_pecota_batters_2013(self, filename, verbose=False):
-
-        header_row = ['mlb_id', '', 'bp_id', 'last_name', 'first_name', '', '', 
-                      '', '', '', '', 'team', '', '', '', 'pa', 'ab', 'r', 
-                      'h1b', 'h2b', 'h3b', 'hr', 'h', '', 'rbi', 'bb', 'hbp', 
-                      'k', 'sac', 'sf', '', 'sb', 'cs']
-        calculated_key = {}
-        self.read_projection_csv(filename, 'pecota', 2013, 'batter',
-                                 header_row, calculated_key,
-                                 verbose=verbose)
-
-    # ZIPS readers
-
-    def read_zips_batters_2011(self, filename, verbose=False):
-
-        header_row = ['mlb_id', '', 'last_name', 'first_name', 'team', '', '', 
-                      '', '', '', 'avg', 'obp', 'slg', '', 'ab', 'r', 'h', 
-                      'h2b', 'h3b', 'hr', 'rbi', 'bb', 'k', 'hbp', 'sb', 'cs', 
-                      'sac', 'sf', '', '', '', 'pa']
-
-        calculated_key = {}
-        self.read_projection_csv(filename, 'zips', 2011, 'batter',
-                                 header_row, calculated_key,
-                                 verbose=verbose)
-
-    def read_zips_batters_2012(self, filename, verbose=False):
-
-        header_row = ['mlb_id', 'full_name', 'team', '', '', '', 'avg', 'obp', 
-                      'slg', '', 'ab', 'r', 'h', 'h2b', 'h3b', 'hr', 'rbi', 
-                      'bb', 'k', 'hbp', 'sb', 'cs', 'sac', 'sf', '', '', '', 'pa']
-
-        calculated_key = {
-            'last_name': last_name_from_full_name,
-            'first_name': first_name_from_full_name,
-        }
-        self.read_projection_csv(filename, 'zips', 2012, 'batter',
-                                 header_row, calculated_key,
-                                 verbose=verbose)
-
-    def read_zips_batters_2013(self, filename, verbose=False):
-
-        header_row = ['mlb_id', 'full_name', 'team', '', '', '', 'avg', 'obp', 
-                      'slg', '', 'pa', 'ab', 'r', 'h', 'h2b', 'h3b', 'hr', 
-                      'rbi', 'bb', 'k', 'hbp', 'sb', 'cs', 'sac', 'sf']
-
-        calculated_key = {
-            'last_name': last_name_from_full_name,
-            'first_name': first_name_from_full_name,
-        }
-        self.read_projection_csv(filename, 'zips', 2013, 'batter',
-                                 header_row, calculated_key,
-                                 verbose=verbose)
-
-    # Steamer readers
-
-    def read_steamer_batters_2011(self, filename, verbose=False):
-
-        header_row = ['mlb_id', 'full_name', '', 'team', '', '', '', '', '', 
-                      '', 'bb', 'hbp', 'sac', 'sf', 'ab', 'k', '', 'h', 'h1b', 
-                      'h2b', 'h3b', 'hr', '', 'sb', 'cs', 'avg', 'obp', 
-                      'slg', 'ops', '', 'r', 'rbi', 'pa']
-
-        calculated_key = {
-            'last_name': last_name_from_full_name,
-            'first_name': first_name_from_full_name,
-        }
-        self.read_projection_csv(filename, 'steamer', 2011, 'batter',
-                                 header_row, calculated_key,
-                                 verbose=verbose)
-
-    def read_steamer_batters_2012(self, filename, verbose=False):
-
-        header_row = ['mlb_id', 'full_name', '', '', '', '', '', 'team', '', 
-                      '', '', 'pa', 'ab', 'bb', 'hbp', 'sac', 'sf', 'k', '', 
-                      'h', 'h3b', 'h2b', 'h1b', 'hr', 'r', 'rbi', 'sb', 'cs',
-                      'avg', 'obp', 'slg']
-
-        calculated_key = {
-            'last_name': last_name_from_full_name,
-            'first_name': first_name_from_full_name,
-        }
-        self.read_projection_csv(filename, 'steamer', 2012, 'batter',
-                                 header_row, calculated_key,
-                                 verbose=verbose)
-
-    def read_steamer_batters_2013(self, filename, verbose=False):
-
-        header_row = ['mlb_id', 'first_name', 'last_name', '', '', '', 'team', 
-                      'pa', '', '', 'bb', 'k', 'hbp', '', 'sac', 'sf', 'ab', 
-                      'h', 'h1b', 'h2b', 'h3b', 'hr', 'avg', 'obp', 'slg', 
-                      'sb', 'cs', 'r', 'rbi']
-
-        calculated_key = {}
-        self.read_projection_csv(filename, 'steamer', 2013, 'batter',
-                                 header_row, calculated_key,
-                                 verbose=verbose)
-
-# Helper functions
-
-def split_full_name(full_name, sep=' '):
-    return full_name.split(sep)
-
-def first_name_from_full_name(full_name, sep=' '):
-    split_result = split_full_name(full_name, sep=sep)
-    if len(split_result) == 0: return None
-    else: return split_result[0]
-
-def last_name_from_full_name(full_name, sep=' '):
-    split_result = split_full_name(full_name, sep=sep)
-    if len(split_result) < 1: return None
-    else: return split_result[1]
