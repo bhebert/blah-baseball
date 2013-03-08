@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import UniqueConstraint
+import datetime
 
 Base = declarative_base()
 
@@ -26,10 +27,13 @@ class Player(Base):
         'polymorphic_on': type
     }
 
+    def age(self, from_date=datetime.date.today()):
+        return (from_date - self.birthdate)
+
 class Batter(Player):
 
     __tablename__ = 'batters'
-    id = Column(String(20), ForeignKey('players.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('players.id'), primary_key=True)
     projections = relationship('BatterProjection', backref='batters')
 
     __mapper_args__ = {
@@ -42,7 +46,7 @@ class Batter(Player):
 class Pitcher(Player):
 
     __tablename__ = 'pitchers'
-    id = Column(String(20), ForeignKey('players.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('players.id'), primary_key=True)
     projections = relationship('PitcherProjection', backref='pitchers')
 
     __mapper_args__ = {
@@ -71,7 +75,7 @@ class BatterProjection(Base):
     __tablename__ = 'batter_projections'
     id = Column(Integer, primary_key=True)
     batter_id = Column(Integer, ForeignKey('batters.id'))
-    projection_id = Column(Integer, ForeignKey('projection_systems.id'))
+    projection_system_id = Column(Integer, ForeignKey('projection_systems.id'))
     UniqueConstraint('batter_id', 'projection_id')
 
     team = Column(String(3))
@@ -95,6 +99,33 @@ class BatterProjection(Base):
     def __repr__(self):
         return '<BatterProjection %d>' % (self.id)
 
+    def h1b(self):
+        try: return self.h - self.h2b - self.h3b - self.hr
+        except TypeError: return None
+
+    def avg(self):
+        try: return self.h / float(self.ab)
+        except ZeroDivisionError, TypeError: return None
+
+    def tb(self):
+        try: return self.h + 2 * self.h2b + 3 * self.h3b + 4 * self.hr
+        except TypeError: return None
+
+    def slg(self):
+        try: return self.tb / float(self.ab)
+        except ZeroDivisionError, TypeError: return None
+
+    def obp(self):
+        try: return (self.h + self.bb + self.hbp) / float(self.pa)
+        except ZeroDivisionError, TypeError: return None
+
+    def obp_technical(self):
+        try: 
+            return (self.h + self.bb + self.hbp) / \
+                   float(self.ab + self.bb + self.hbp + self.sf)
+        except ZeroDivisionError, TypeError:
+            return None
+
 class PitcherProjection(Base):
 
     __tablename__ = 'pitcher_projections'
@@ -105,6 +136,7 @@ class PitcherProjection(Base):
 
     w = Column(Integer)
     l = Column(Integer)
+    sv = Column(Integer)
     ip = Column(Float)
     h = Column(Integer)
     r = Column(Integer)
@@ -117,3 +149,11 @@ class PitcherProjection(Base):
 
     def __repr__(self):
         return '<PitcherProjection %d>' % (self.id)
+
+    def ra(self):
+        try: return self.r / self.ip
+        except ZeroDivisionError, TypeError: return None
+
+    def era(self):
+        try: return self.er / self.ip
+        except ZeroDivisionError, TypeError: return None
