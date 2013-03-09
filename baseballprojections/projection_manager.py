@@ -1,11 +1,17 @@
 from schema import *
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 import csv
 import datetime
 import inspect
 
 Session = sessionmaker()
+
+def getSQLAlchemyFields(classname):
+    attribs = classname.__dict__.iteritems()
+    attribs = filter(lambda (k,v): type(v) is InstrumentedAttribute, attribs)
+    return map(lambda (x,_): x, attribs)
 
 class ProjectionManager(object):
 
@@ -153,57 +159,20 @@ class ProjectionManager(object):
         self.session.commit()
         return projection_system
 
-    def add_batter_projection(self, batter_id=None, projection_system_id=None,
-                              team=None, pa=None, ab=None, r=None, rbi=None,
-                              h=None, h2b=None, h3b=None, hr=None, sb=None,
-                              cs=None, bb=None, k=None, hbp=None, sac=None,
-                              sf=None):
+    def add_batter_projection(self, **kwargs):
         """
         Add a projection for an individual batter to the database. 
         """
-        projection = BatterProjection(batter_id=batter_id, 
-                                      projection_system_id=projection_system_id,
-                                      team=team,
-                                      pa=pa,
-                                      ab=ab,
-                                      r=r,
-                                      rbi=rbi,
-                                      h=h,
-                                      h2b=h2b,
-                                      h3b=h3b,
-                                      hr=hr,
-                                      sb=sb,
-                                      cs=cs,
-                                      bb=bb,
-                                      k=k,
-                                      hbp=hbp,
-                                      sac=sac,
-                                      sf=sf)
+        projection = BatterProjection(**kwargs)
         self.session.add(projection)
         self.session.commit()
         return projection
 
-    def add_pitcher_projection(self, pitcher_id=None, projection_id=None,
-                               team=None, w=None, l=None, ip=None, h=None,
-                               r=None, er=None, hr=None, bb=None, k=None,
-                               wp=None, hbp=None):
+    def add_pitcher_projection(self, **kwargs):
         """
         Add a projection for an individual pitcher to the database. 
         """
-        projection = PitcherProjection(pitcher_id=batter_id, 
-                                       projection_id=projection_id,
-                                       team=team,
-                                       w=w,
-                                       l=l,
-                                       ip=ip,
-                                       h=h,
-                                       r=r,
-                                       er=er,
-                                       hr=hr,
-                                       bb=bb,
-                                       k=k,
-                                       wp=wp,
-                                       hbp=hbp)
+        projection = PitcherProjection(**kwargs)
         self.session.add(projection)
         self.session.commit()
         return projection
@@ -215,7 +184,7 @@ class ProjectionManager(object):
         return self.session.query(Player).filter_by(**kwargs)
 
     def read_projection_csv(self, filename, projection_name, year, is_actual,
-                            player_type, header_row, calculated_key={}, 
+                            player_type, header_row, post_processor=None, 
                             skip_rows=1, verbose=False):
 
         if player_type not in ('batter', 'pitcher'):
@@ -229,16 +198,16 @@ class ProjectionManager(object):
             reader.next()
         n = len(header_row)
 
-        add_batter_args = inspect.getargspec(self.add_or_update_batter).args
-        add_pitcher_args = inspect.getargspec(self.add_or_update_pitcher).args
-        add_batter_projection_args = inspect.getargspec(self.add_batter_projection).args
-        add_pitcher_projection_args = inspect.getargspec(self.add_pitcher_projection).args
+        add_batter_args = getSQLAlchemyFields(Batter)
+        add_pitcher_args = getSQLAlchemyFields(Pitcher)
+        add_batter_projection_args = getSQLAlchemyFields(BatterProjection)
+        add_pitcher_projection_args = getSQLAlchemyFields(PitcherProjection)
 
         for row in reader:
 
             data = dict(zip(header_row, row[:n]))
-            for k in calculated_key:
-                data[k] = calculated_key[k](data)
+            if post_processor is not None:
+                data = post_processor(data)
 
             if player_type == 'batter':
                 player_data = { x: data[x] for x in add_batter_args if x in data }
@@ -260,3 +229,6 @@ class ProjectionManager(object):
 
             if verbose:
                 print('%s, %s' % (player, projection))
+
+    def query(self, *args):
+        return self.session.query(*args)

@@ -12,7 +12,6 @@ For databases I used SQLite3 (3.7.14.1) but you should be OK with anything that 
 
 ### To-do
 
-- Allow projection of calculated stats directly, for example for projections that only provide SLG and not the constituent stats
 - Add more reader functions/check raw files
 - Add CSV generator
 - Test runs! Add some reconciliation

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, Date, ForeignKey
+from sqlalchemy import Column, Boolean, Integer, Float, String, Date, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.schema import UniqueConstraint
@@ -63,12 +63,14 @@ class ProjectionSystem(Base):
 
     name = Column(String(20))
     year = Column(Integer)
+    is_actual = Column(Boolean)
     UniqueConstraint('name', 'year')
+
     batter_projections = relationship('BatterProjection')
     pitcher_projections = relationship('PitcherProjection')
 
     def __repr__(self):
-        return '<ProjectionSystem %d (%s, %d)>' % (id, name, year)
+        return '<ProjectionSystem %d (%s, %d)>' % (self.id, self.name, self.year)
 
 class BatterProjection(Base):
 
@@ -85,6 +87,7 @@ class BatterProjection(Base):
     r = Column(Integer)
     rbi = Column(Integer)
     h = Column(Integer)
+    h1b = Column(Integer)
     h2b = Column(Integer)
     h3b = Column(Integer)
     hr = Column(Integer)
@@ -95,36 +98,12 @@ class BatterProjection(Base):
     hbp = Column(Integer)
     sac = Column(Integer)
     sf = Column(Integer)
+    avg = Column(Float)
+    obp = Column(Float)
+    slg = Column(Float)
 
     def __repr__(self):
         return '<BatterProjection %d>' % (self.id)
-
-    def h1b(self):
-        try: return self.h - self.h2b - self.h3b - self.hr
-        except TypeError: return None
-
-    def avg(self):
-        try: return self.h / float(self.ab)
-        except ZeroDivisionError, TypeError: return None
-
-    def tb(self):
-        try: return self.h + 2 * self.h2b + 3 * self.h3b + 4 * self.hr
-        except TypeError: return None
-
-    def slg(self):
-        try: return self.tb / float(self.ab)
-        except ZeroDivisionError, TypeError: return None
-
-    def obp(self):
-        try: return (self.h + self.bb + self.hbp) / float(self.pa)
-        except ZeroDivisionError, TypeError: return None
-
-    def obp_technical(self):
-        try: 
-            return (self.h + self.bb + self.hbp) / \
-                   float(self.ab + self.bb + self.hbp + self.sf)
-        except ZeroDivisionError, TypeError:
-            return None
 
 class PitcherProjection(Base):
 
@@ -141,6 +120,8 @@ class PitcherProjection(Base):
     h = Column(Integer)
     r = Column(Integer)
     er = Column(Integer)
+    ra = Column(Float)
+    era = Column(Float)
     hr = Column(Integer)
     bb = Column(Integer)
     k = Column(Integer)
@@ -149,11 +130,3 @@ class PitcherProjection(Base):
 
     def __repr__(self):
         return '<PitcherProjection %d>' % (self.id)
-
-    def ra(self):
-        try: return self.r / self.ip
-        except ZeroDivisionError, TypeError: return None
-
-    def era(self):
-        try: return self.er / self.ip
-        except ZeroDivisionError, TypeError: return None
