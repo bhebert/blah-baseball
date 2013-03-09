@@ -65,10 +65,11 @@ class ProjectionSystem(Base):
     name = Column(String(20))
     year = Column(Integer)
     is_actual = Column(Boolean)
-    UniqueConstraint('name', 'year')
 
     batter_projections = relationship('BatterProjection')
     pitcher_projections = relationship('PitcherProjection')
+
+    __table_args__ = ( UniqueConstraint('name', 'year'), )
 
     def __repr__(self):
         return '<ProjectionSystem %d (%s, %d)>' % (self.id, self.name, self.year)

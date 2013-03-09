@@ -51,12 +51,12 @@ class ProjectionManager(object):
 
         criteria = {}
         if any(map(lambda x: x != None, ids)):
-            criteria = { x[0]: x[1] for x in zip(id_fields, ids) 
-                         if x[1] is not None }
+            criteria = { k: v for (k,v) in zip(id_fields, ids) 
+                         if v is not None }
             matches = self.find_players(**criteria).all()
         elif all(map(lambda x: x != None, name_fields)):
-            criteria = { x[0]: x[1] for x in zip(name_fields, names) 
-                         if x[1] is not None }
+            criteria = { k: v for (k,v) in zip(name_fields, names) 
+                         if v is not None }
             matches = self.find_players(**criteria).all()
         else:
             raise Exception('Error: add_or_update_player must be called with '\
