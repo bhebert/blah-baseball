@@ -8,10 +8,11 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_pecota_batters_2011(self, filename, verbose=False):
 
-        header_row = ['mlb_id', '', 'last_name', 'first_name', 'team', '', '', 
-                      '', '', '', '', 'birthdate', '', 'pa', 'ab', 'r', 'h1b', 
-                      'h2b', 'h3b', 'hr', 'rbi', 'bb', 'hbp', 'k', 'sb', 'cs', 
-                      'sac', 'sf']
+        header_row = ['last_name', 'first_name', 'team', '', '', '', '', '', 
+                      '', 'birthdate', '', 'pa', 'ab', 'r', 'h1b', 'h2b', 
+                      'h3b', 'hr', 'rbi', 'bb', 'hbp', 'k', 'sb', 'cs', 'sac', 
+                      'sf', '', '', '', '', '', '', '', '', '', '', '', '', 
+                      '', '', '', 'mlb_id', 'retrosheet_id', 'lahman_id']
         self.read_projection_csv(filename, 'pecota', 2011,
                                  is_actual=False,
                                  player_type='batter',
@@ -21,10 +22,11 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_pecota_batters_2012(self, filename, verbose=False):
 
-        header_row = ['mlb_id', 'bp_id', 'last_name', 'first_name', '', '', '',
-                      '', '', '', 'team', '', '', '', 'pa', 'ab', 'r', 'h1b', 
-                      'h2b', 'h3b', 'hr', 'h', '', 'rbi', 'bb', 'hbp', 'k', 
-                      'sac', 'sf', '', 'sb', 'cs']
+        header_row = ['bp_id', 'last_name', 'first_name', '', '', '', '', '', 
+                      '', 'team', '', '', '', 'pa', 'ab', 'r', 'h1b', 'h2b', 
+                      'h3b', 'hr', 'h', '', 'rbi', 'bb', 'hbp', 'k', 'sac', 
+                      'sf', '', 'sb', 'cs', '', '', '', '', '', '', '', '', '',
+                      '', '', '', '', '', '', '', 'mlb_id']
         self.read_projection_csv(filename, 'pecota', 2012, 
                                  is_actual=False,
                                  player_type='batter',
@@ -34,10 +36,11 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_pecota_batters_2013(self, filename, verbose=False):
 
-        header_row = ['mlb_id', '', 'bp_id', 'last_name', 'first_name', '', '', 
-                      '', '', '', '', 'team', '', '', '', 'pa', 'ab', 'r', 
-                      'h1b', 'h2b', 'h3b', 'hr', 'h', '', 'rbi', 'bb', 'hbp', 
-                      'k', 'sac', 'sf', '', 'sb', 'cs']
+        header_row = ['bp_id', 'last_name', 'first_name', '', '', '', '', '', 
+                      '', 'team', '', '', '', 'pa', 'ab', 'r', 'h1b', 'h2b', 
+                      'h3b', 'hr', 'h', '', 'rbi', 'bb', 'hbp', 'k', 'sac', 
+                      'sf', '', 'sb', 'cs', '', '', '', '', '', '', '', '', '',
+                      '', '', '', '', '', '', '', '', 'mlb_id']
         self.read_projection_csv(filename, 'pecota', 2013, 
                                  is_actual=False,
                                  player_type='batter',

@@ -14,9 +14,10 @@ class Player(Base):
 
     retrosheet_id = Column(String(20))
     mlb_id = Column(String(20))
-    pecota_id = Column(String(20))
+    bp_id = Column(String(20))
     fangraphs_id = Column(String(20))
-    br_id = Column(String(20))
+    retrosheet_id = Column(String(20))
+    lahman_id = Column(String(20))
 
     last_name = Column(String(50))
     first_name = Column(String(50))

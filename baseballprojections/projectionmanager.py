@@ -23,9 +23,9 @@ class ProjectionManager(object):
         Base.metadata.create_all(self.engine)
 
     def add_or_update_player(self, player_type, overwrite=False, 
-                             retrosheet_id=None, mlb_id=None, pecota_id=None, 
-                             fangraphs_id=None, br_id=None, last_name=None, 
-                             first_name=None, birthdate=None):
+                             retrosheet_id=None, mlb_id=None, bp_id=None, 
+                             fangraphs_id=None, lahman_id=None,
+                             last_name=None, first_name=None, birthdate=None):
         """
         Add a player to the database. If a player is already found with 
         matching ids, populate any missing non-id fields (overwrite=False) or 
@@ -43,8 +43,9 @@ class ProjectionManager(object):
                             'player_type = either "batter" or "pitcher"')
 
         matches = []
-        id_fields = ['retrosheet_id', 'mlb_id', 'pecota_id', 'fangraphs_id', 'br_id']
-        ids = (retrosheet_id, mlb_id, pecota_id, fangraphs_id, br_id)
+        id_fields = ['retrosheet_id', 'mlb_id', 'bp_id', 'fangraphs_id', 
+                     'lahman_id']
+        ids = (retrosheet_id, mlb_id, bp_id, fangraphs_id, lahman_id)
         name_fields = ('last_name', 'first_name')
         names = (last_name, first_name)
 
@@ -77,18 +78,18 @@ class ProjectionManager(object):
             if player_type == 'batter':
                 match = Batter(retrosheet_id=retrosheet_id, 
                                mlb_id=mlb_id,
-                               pecota_id=pecota_id,
+                               bp_id=bp_id,
                                fangraphs_id=fangraphs_id,
-                               br_id=br_id,
+                               lahman_id=lahman_id,
                                last_name=last_name,
                                first_name=first_name,
                                birthdate=birthdate)
             else:
                 match = Pitcher(retrosheet_id=retrosheet_id, 
                                 mlb_id=mlb_id,
-                                pecota_id=pecota_id,
+                                bp_id=bp_id,
                                 fangraphs_id=fangraphs_id,
-                                br_id=br_id,
+                                lahman_id=lahman_id,
                                 last_name=last_name,
                                 first_name=first_name,
                                 birthdate=birthdate)
@@ -96,58 +97,6 @@ class ProjectionManager(object):
 
         self.session.commit()
         return match
-
-    def add_or_update_batter(self, overwrite=False, retrosheet_id=None, 
-                             mlb_id=None, pecota_id=None, fangraphs_id=None, 
-                             br_id=None, last_name=None, first_name=None, 
-                             birthdate=None):
-        """
-        Add a batter to the database. If a batter is already found with 
-        matching ids, populate any missing non-id fields (overwrite=False) or 
-        overwrite them (overwrite=True). Never overwrites an id field; raises 
-        an exception if inconsistent ids found. 
-
-        If no id fields are supplied but last_name and first_name (and 
-        optionally birthdate) are supplied, tries to match on that. Not ideal
-        due to nicknames, name changes, players with identical names, etc. If
-        there is not exactly one match, raises an exception. 
-        """
-        return self.add_or_update_player(player_type='batter', 
-                                         overwrite=overwrite,
-                                         retrosheet_id=retrosheet_id,
-                                         mlb_id=mlb_id,
-                                         pecota_id=pecota_id,
-                                         fangraphs_id=fangraphs_id,
-                                         br_id=br_id,
-                                         last_name=last_name,
-                                         first_name=first_name,
-                                         birthdate=birthdate)
-
-    def add_or_update_pitcher(self, overwrite=False, retrosheet_id=None, 
-                              mlb_id=None, pecota_id=None, fangraphs_id=None, 
-                              br_id=None, last_name=None, first_name=None, 
-                              birthdate=None):
-        """
-        Add a pitcher to the database. If a pitcher is already found with 
-        matching ids, populate any missing non-id fields (overwrite=False) or 
-        overwrite them (overwrite=True). Never overwrites an id field; raises 
-        an exception if inconsistent ids found. 
-
-        If no id fields are supplied but last_name and first_name (and 
-        optionally birthdate) are supplied, tries to match on that. Not ideal
-        due to nicknames, name changes, players with identical names, etc. If
-        there is not exactly one match, raises an exception. 
-        """
-        return self.add_or_update_player(player_type='pitcher', 
-                                         overwrite=overwrite,
-                                         retrosheet_id=retrosheet_id,
-                                         mlb_id=mlb_id,
-                                         pecota_id=pecota_id,
-                                         fangraphs_id=fangraphs_id,
-                                         br_id=br_id,
-                                         last_name=last_name,
-                                         first_name=first_name,
-                                         birthdate=birthdate)
 
     def add_projection_system(self, name, year, is_actual):
         """
@@ -211,7 +160,8 @@ class ProjectionManager(object):
 
             if player_type == 'batter':
                 player_data = { x: data[x] for x in add_batter_args if x in data }
-                player = self.add_or_update_batter(**player_data)
+                player_data['player_type'] = 'batter'
+                player = self.add_or_update_player(**player_data)
                 projection_data = { x: data[x] for x in add_batter_projection_args
                                     if x in data }
                 projection_data['batter_id'] = player.id
@@ -220,7 +170,8 @@ class ProjectionManager(object):
 
             else:
                 player_data = { x: data[x] for x in add_pitcher_args if x in data }
-                player = self.add_or_update_pitcher(**player_data)
+                player_data['player_type'] = 'pitcher'
+                player = self.add_or_update_player(**player_data)
                 projection_data = { x: data[x] for x in add_pitcher_projection_args
                                     if x in data }
                 projection_data['pitcher_id'] = player.id
@@ -230,5 +181,10 @@ class ProjectionManager(object):
             if verbose:
                 print('%s, %s' % (player, projection))
 
+    # shortcuts
+
     def query(self, *args):
         return self.session.query(*args)
+
+    def rollback(self):
+        return self.session.rollback()
