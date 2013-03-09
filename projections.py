@@ -3,30 +3,38 @@ import datetime
 
 # Helper functions
 
-def split_full_name(full_name, sep=' '):
-    return full_name.split(sep)
+def split_lastname_firstname_comma(full_name):
+    splitname = full_name.split(',')
+    if len(splitname) == 1:
+        return ('', splitname[0].strip())
+    return (splitname[1].strip(), splitname[0].strip())
 
-def first_name_from_full_name(full_name, sep=' '):
-    split_result = split_full_name(full_name, sep=sep)
-    if len(split_result) == 0: return None
-    else: return split_result[0]
+def split_firstname_lastname_space(full_name):
+    splitname = full_name.split(' ')
+    if len(splitname) == 1:
+        return ('', splitname[1].strip())
+    return (splitname[0].strip(), ' '.join(splitname[1:]).strip())
 
-def last_name_from_full_name(full_name, sep=' '):
-    split_result = split_full_name(full_name, sep=sep)
-    if len(split_result) < 1: return None
-    else: return split_result[1]
-
-def batter_post_processor(x, strptime_format='%m/%d/%Y', 
+def batter_post_processor(x, 
+                          name_handler=split_firstname_lastname_space,
+                          strptime_format='%m/%d/%Y', 
                           try_soft_obp=True):
 
     # Type conversion not needed for SQLAlchemy, but is needed below when we
     # try to compute calculated fields. 
     for k in ('h', 'h1b', 'h2b', 'h3b', 'hr', 'ab', 'pa', 'bb', 'hbp', 'sf'):
         if k in x and x[k] is not None and x[k] != '':
-            x[k] = int(x[k])
+            x[k] = float(x[k])
 
     if 'birthdate' in x and 'birthdate' is not None and 'birthdate' != '':
         x['birthdate'] = datetime.datetime.strptime(x['birthdate'], '%m/%d/%Y')
+
+    if 'full_name' in x and 'full_name' is not None and 'full_name' != '':
+        (first_name, last_name) = name_handler(x['full_name'])
+        if 'last_name' not in x or ('last_name' is None and 'last_name' != ''):
+            x['last_name'] = last_name
+        if 'first_name' not in x or ('first_name' is None and 'first_name' != ''):
+            x['first_name'] = first_name
 
     if 'h' not in x or x['h'] is None:
         try: x['h'] = x['h1b'] + x['h2b'] + x['h3b'] + x['hr']
@@ -53,6 +61,7 @@ def batter_post_processor(x, strptime_format='%m/%d/%Y',
                    float(x['ab'] + x['bb'] + x['hbp'] + x['sf'])
     except:
         if try_soft_obp:
+            # technically inexact but should be really close
             try: x['obp'] = (x['h'] + x['bb'] + x['hbp']) / float(x['pa'])
             except: pass
         else: 
