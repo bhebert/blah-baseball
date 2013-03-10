@@ -1,5 +1,5 @@
 from schema import *
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 import csv
@@ -35,37 +35,41 @@ class ProjectionManager(object):
         there is not exactly one match, raises an exception. 
         """
 
-        if player_type not in ('batter', 'pitcher'):
+        if player_type == 'batter':
+            player_class = Batter
+        elif player_type == 'pitcher':
+            player_class = Pitcher
+        else:
             raise Exception('Error: add_or_update_player must be called with '\
                             'player_type = either "batter" or "pitcher"')
 
         matches = []
-        id_criteria = { k: kwargs[k] for k in Player.id_fields() if k in kwargs }
-        name_criteria = { k: kwargs[k] for k in Player.name_fields() if k in kwargs }
+        id_clauses = [ (getattr(player_class, k) == kwargs[k])
+                       for k in Player.id_fields() 
+                       if (k in kwargs and kwargs[k] != '') ]
+        name_clauses = [ (getattr(player_class, k) == kwargs[k])
+                         for k in Player.name_fields()
+                         if (k in kwargs and kwargs[k] != '') ]
 
         criteria = {}
-        if any(map(lambda x: x != None, id_criteria.values())):
-            matches = self.find_players(**id_criteria).all()
-        elif all(map(lambda x: x != None, name_criteria.values())):
-            matches = self.find_players(**name_criteria).all()
+        if len(id_clauses) > 0:
+            matches = self.query(player_class).filter(or_(*id_clauses)).all()
+        elif len(name_clauses) > 0:
+            matches = self.query(player_class).filter(*name_clauses).all()
         else:
             raise Exception('Error: add_or_update_player must be called with '\
                             'at least one id parameter or both last_name and '\
                             'first_name parameters')
 
         if len(matches) > 1:
-            raise Exception('Error: multiple matches found for criteria %s:\n '\
-                            '%s' % (ids, criteria))
+            raise Exception('Error: multiple matches found')
         elif len(matches) == 1:
             match = matches[0]
             for field, value in kwargs.iteritems():
                 if overwrite or getattr(match, field) is None:
                     setattr(match, field, value)
         else:
-            if player_type == 'batter':
-                match = Batter(**kwargs)
-            else:
-                match = Pitcher(**kwargs)
+            match = player_class(**kwargs)
             self.session.add(match)
 
         self.session.commit()
@@ -98,12 +102,6 @@ class ProjectionManager(object):
         self.session.add(projection)
         self.session.commit()
         return projection
-
-    def find_players(self, **kwargs):
-        """
-        Retrieves a list of players that match the indicated criteria. 
-        """
-        return self.session.query(Player).filter_by(**kwargs)
 
     def read_projection_csv(self, filename, projection_name, year, is_actual,
                             player_type, header_row, post_processor=None, 
