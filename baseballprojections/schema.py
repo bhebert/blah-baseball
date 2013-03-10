@@ -59,11 +59,11 @@ class Batter(Player):
 
     def prettyprint(self):
         super(Batter, self).prettyprint()
-        print('Projections (AVG/OBP/SLG): ')
-        for projection in self.projections:
-            print('%20s, %4d : %.3f / %.3f / %.3f' % \
-                  (projection.projection_system.name, projection.projection_system.year, 
-                   projection.avg, projection.obp, projection.slg))
+        print('Projections (OBP SLG HR R RBI SB): ')
+        for proj in self.projections:
+            print('%20s, %4d : %.3f %.3f %3d %3d %3d %3d' % \
+                  (proj.projection_system.name, proj.projection_system.year, 
+                   proj.obp, proj.slg, proj.hr, proj.r, proj.rbi, proj.sb))
 
 class Pitcher(Player):
 
