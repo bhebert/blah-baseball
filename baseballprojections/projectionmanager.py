@@ -23,14 +23,11 @@ class ProjectionManager(object):
         Base.metadata.create_all(self.engine)
 
     def add_or_update_player(self, player_type, overwrite=False, 
-                             retrosheet_id=None, mlb_id=None, bp_id=None, 
-                             fangraphs_id=None, lahman_id=None,
-                             last_name=None, first_name=None, birthdate=None):
+                             **kwargs):
         """
         Add a player to the database. If a player is already found with 
-        matching ids, populate any missing non-id fields (overwrite=False) or 
-        overwrite them (overwrite=True). Never overwrites an id field; raises 
-        an exception if inconsistent ids found. 
+        matching ids, populate any missing fields (overwrite=False) or 
+        overwrite whatever values they might have (overwrite=True). 
 
         If no id fields are supplied but last_name and first_name (and 
         optionally birthdate) are supplied, tries to match on that. Not ideal
@@ -43,56 +40,32 @@ class ProjectionManager(object):
                             'player_type = either "batter" or "pitcher"')
 
         matches = []
-        id_fields = ['retrosheet_id', 'mlb_id', 'bp_id', 'fangraphs_id', 
-                     'lahman_id']
-        ids = (retrosheet_id, mlb_id, bp_id, fangraphs_id, lahman_id)
-        name_fields = ('last_name', 'first_name')
-        names = (last_name, first_name)
+        id_criteria = { k: kwargs[k] for k in Player.id_fields() if k in kwargs }
+        name_criteria = { k: kwargs[k] for k in Player.name_fields() if k in kwargs }
 
         criteria = {}
-        if any(map(lambda x: x != None, ids)):
-            criteria = { k: v for (k,v) in zip(id_fields, ids) 
-                         if v is not None }
-            matches = self.find_players(**criteria).all()
-        elif all(map(lambda x: x != None, name_fields)):
-            criteria = { k: v for (k,v) in zip(name_fields, names) 
-                         if v is not None }
-            matches = self.find_players(**criteria).all()
+        if any(map(lambda x: x != None, id_criteria.values())):
+            matches = self.find_players(**id_criteria).all()
+        elif all(map(lambda x: x != None, name_criteria.values())):
+            matches = self.find_players(**name_criteria).all()
         else:
             raise Exception('Error: add_or_update_player must be called with '\
-                            'at least one id parameter or last_name/first_name '\
-                            'parameters')
- 
-        non_id_fields = ['last_name', 'first_name', 'birthdate']
-        non_ids = [last_name, first_name, birthdate]
+                            'at least one id parameter or both last_name and '\
+                            'first_name parameters')
 
         if len(matches) > 1:
             raise Exception('Error: multiple matches found for criteria %s:\n '\
                             '%s' % (ids, criteria))
         elif len(matches) == 1:
             match = matches[0]
-            for field, value in zip(non_id_fields, non_ids):
+            for field, value in kwargs.iteritems():
                 if overwrite or getattr(match, field) is None:
                     setattr(match, field, value)
         else:
             if player_type == 'batter':
-                match = Batter(retrosheet_id=retrosheet_id, 
-                               mlb_id=mlb_id,
-                               bp_id=bp_id,
-                               fangraphs_id=fangraphs_id,
-                               lahman_id=lahman_id,
-                               last_name=last_name,
-                               first_name=first_name,
-                               birthdate=birthdate)
+                match = Batter(**kwargs)
             else:
-                match = Pitcher(retrosheet_id=retrosheet_id, 
-                                mlb_id=mlb_id,
-                                bp_id=bp_id,
-                                fangraphs_id=fangraphs_id,
-                                lahman_id=lahman_id,
-                                last_name=last_name,
-                                first_name=first_name,
-                                birthdate=birthdate)
+                match = Pitcher(**kwargs)
             self.session.add(match)
 
         self.session.commit()

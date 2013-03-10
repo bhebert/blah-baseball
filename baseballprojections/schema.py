@@ -12,12 +12,12 @@ class Player(Base):
     id = Column(Integer, primary_key=True)
     type = Column(String(20))
 
-    retrosheet_id = Column(String(20))
     mlb_id = Column(String(20))
+    retrosheet_id = Column(String(20))
     bp_id = Column(String(20))
     fangraphs_id = Column(String(20))
-    retrosheet_id = Column(String(20))
     lahman_id = Column(String(20))
+    steamer_id = Column(String(20))
 
     last_name = Column(String(50))
     first_name = Column(String(50))
@@ -31,6 +31,19 @@ class Player(Base):
     def age(self, from_date=datetime.date.today()):
         return (from_date - self.birthdate)
 
+    def prettyprint(self):
+        print('%s, %s (id: %d, MLB ID: %s)' % \
+              (self.last_name, self.first_name, self.id, self.mlb_id))
+
+    @classmethod
+    def id_fields(cls):
+        return ['mlb_id', 'retrosheet_id', 'bp_id', 'fangraphs_id', 
+                'lahman_id', 'steamer_id']
+
+    @classmethod
+    def name_fields(cls):
+        return ['last_name', 'first_name']
+
 class Batter(Player):
 
     __tablename__ = 'batters'
@@ -43,6 +56,14 @@ class Batter(Player):
 
     def __repr__(self):
         return '<Batter %d (%s, %s)>' % (self.id, self.last_name, self.first_name)
+
+    def prettyprint(self):
+        super(Batter, self).prettyprint()
+        print('Projections (AVG/OBP/SLG): ')
+        for projection in self.projections:
+            print('%20s, %4d : %.3f / %.3f / %.3f' % \
+                  (projection.projection_system.name, projection.projection_system.year, 
+                   projection.avg, projection.obp, projection.slg))
 
 class Pitcher(Player):
 
@@ -66,8 +87,8 @@ class ProjectionSystem(Base):
     year = Column(Integer)
     is_actual = Column(Boolean)
 
-    batter_projections = relationship('BatterProjection')
-    pitcher_projections = relationship('PitcherProjection')
+    batter_projections = relationship('BatterProjection', backref='projection_system')
+    pitcher_projections = relationship('PitcherProjection', backref='projection_system')
 
     __table_args__ = ( UniqueConstraint('name', 'year'), )
 
