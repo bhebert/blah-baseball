@@ -29,12 +29,18 @@ class MyProjectionManager(pm.ProjectionManager):
         print('Reading Steamer 2011...')
         self.read_steamer_batters_2011(os.path.join(base_dir, 'Steamer Hitters 2011.csv'),
                                        verbose=verbose)
+        self.read_steamer_pitchers_2011(os.path.join(base_dir, 'Steamer Pitchers 2011.csv'),
+                                        verbose=verbose)
         print('Reading Steamer 2012...')
         self.read_steamer_batters_2012(os.path.join(base_dir, 'Steamer Hitters 2012.csv'),
                                        verbose=verbose)
+        self.read_steamer_pitchers_2012(os.path.join(base_dir, 'Steamer Pitchers 2012.csv'),
+                                        verbose=verbose)
         print('Reading Steamer 2013...')
         self.read_steamer_batters_2013(os.path.join(base_dir, 'Steamer Hitters 2013.csv'),
                                        verbose=verbose)
+        self.read_steamer_pitchers_2013(os.path.join(base_dir, 'Steamer Pitchers 2013.csv'),
+                                        verbose=verbose)
 
     # PECOTA readers
 
@@ -173,6 +179,19 @@ class MyProjectionManager(pm.ProjectionManager):
                                  post_processor=helper.batter_post_processor,
                                  verbose=verbose)
 
+    def read_steamer_pitchers_2011(self, filename, verbose=False):
+
+        header_row = ['mlb_id', 'full_name', '', '', '', 'team', '', '', '', 
+                      'ip', '', '', '', '', '', '', 'k', 'bb', 'hbp', '', 'hr',
+                      '', '', '', '', 'era', 'er', 'h', 'whip', '', '', 'w', 
+                      'l', 'sv']
+        self.read_projection_csv(filename, 'steamer', 2011, 
+                                 is_actual=False,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=helper.pitcher_post_processor,
+                                 verbose=verbose)
+
     def read_steamer_batters_2012(self, filename, verbose=False):
 
         header_row = ['mlb_id', 'full_name', '', '', '', '', '', 'team', '', 
@@ -184,6 +203,19 @@ class MyProjectionManager(pm.ProjectionManager):
                                  player_type='batter',
                                  header_row=header_row, 
                                  post_processor=helper.batter_post_processor,
+                                 verbose=verbose)
+
+    def read_steamer_pitchers_2012(self, filename, verbose=False):
+
+        header_row = ['mlb_id', 'full_name', '', '', 'birthdate', '', 'team', 
+                      '', '', '', 'ip', '', '', '', '', '', '', '',  'k', 'bb', 
+                      'hbp', 'h', '', 'hr', '', '', '', '', 'era', '', '', 
+                      'er', 'whip', 'w', 'l', 'sv']
+        self.read_projection_csv(filename, 'steamer', 2012, 
+                                 is_actual=False,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=helper.pitcher_post_processor,
                                  verbose=verbose)
 
     def read_steamer_batters_2013(self, filename, verbose=False):
@@ -198,3 +230,21 @@ class MyProjectionManager(pm.ProjectionManager):
                                  header_row=header_row, 
                                  post_processor=helper.batter_post_processor,
                                  verbose=verbose)
+
+    def read_steamer_pitchers_2013(self, filename, verbose=False):
+
+        header_row = ['steamer_id', 'mlb_id', 'first_name', 'last_name', 'ip',
+                      '', '', '', 'sv', '', '', '', '', '', '', '', '', '', '',
+                      '', '', '', '', '', '', '', 'era', 'ra', 'k', 'bb', 
+                      'hbp', '', '', '', 'h', 'er', 'r', 'whip', 'w', 'l']
+        self.read_projection_csv(filename, 'steamer', 2013, 
+                                 is_actual=False,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=steamer2013_post_processor,
+                                 verbose=verbose)
+
+def steamer2013_post_processor(x):
+    try: x['hr'] = float(x['hr9']) / 9.0 * float(x['ip'])
+    except: pass
+    return helper.pitcher_post_processor(x)

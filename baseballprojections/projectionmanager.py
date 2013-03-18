@@ -1,17 +1,12 @@
+from helper import getSQLAlchemyFields
 from schema import *
 from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.attributes import InstrumentedAttribute
 import csv
 import datetime
 import inspect
 
 Session = sessionmaker()
-
-def getSQLAlchemyFields(classname):
-    attribs = classname.__dict__.iteritems()
-    attribs = filter(lambda (k,v): type(v) is InstrumentedAttribute, attribs)
-    return map(lambda (x,_): x, attribs)
 
 class ProjectionManager(object):
 

@@ -1,5 +1,11 @@
 import datetime
 import re
+from sqlalchemy.orm.attributes import InstrumentedAttribute
+
+def getSQLAlchemyFields(classname):
+    attribs = classname.__dict__.iteritems()
+    attribs = filter(lambda (k,v): type(v) is InstrumentedAttribute, attribs)
+    return map(lambda (x,_): x, attribs)
 
 def split_lastname_firstname_comma(full_name):
     splitname = full_name.split(',')
@@ -21,7 +27,8 @@ def basic_post_processor(x,
                          strptime_format='%m/%d/%Y'):
 
     if 'birthdate' in x and x['birthdate'] is not None and x['birthdate'] != '':
-        x['birthdate'] = datetime.datetime.strptime(x['birthdate'], strptime_format)
+        try: x['birthdate'] = datetime.datetime.strptime(x['birthdate'], strptime_format)
+        except: del x['birthdate']
 
     if 'last_name' in x and x['last_name'] is not None:
         x['last_name'] = simple_name(x['last_name'])
