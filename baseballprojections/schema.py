@@ -78,6 +78,14 @@ class Pitcher(Player):
     def __repr__(self):
         return '<Pitcher %d (%s, %s)>' % (self.id, self.last_name, self.first_name)
 
+    def prettyprint(self):
+        super(Pitcher, self).prettyprint()
+        print('Projections (W SV ERA K WHIP IP): ')
+        for proj in self.projections:
+            print('%20s, %4d : %3d %3d %.2f %3d %.3f %.1f' % \
+                  (proj.projection_system.name, proj.projection_system.year, 
+                   proj.w, proj.sv, proj.era, proj.k, proj.whip, proj.ip))
+
 class ProjectionSystem(Base):
 
     __tablename__ = 'projection_systems'
@@ -133,8 +141,10 @@ class PitcherProjection(Base):
     __tablename__ = 'pitcher_projections'
     id = Column(Integer, primary_key=True)
     pitcher_id = Column(Integer, ForeignKey('pitchers.id'))
-    projection_id = Column(Integer, ForeignKey('projection_systems.id'))
+    projection_system_id = Column(Integer, ForeignKey('projection_systems.id'))
     UniqueConstraint('pitcher_id', 'projection_id')
+
+    team = Column(String(3))
 
     w = Column(Float)
     l = Column(Float)
@@ -150,6 +160,7 @@ class PitcherProjection(Base):
     k = Column(Float)
     wp = Column(Float)
     hbp = Column(Float)
+    whip = Column(Float)
 
     def __repr__(self):
         return '<PitcherProjection %d>' % (self.id)

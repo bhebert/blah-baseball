@@ -31,8 +31,9 @@ class ProjectionManager(object):
 
         If no id fields are supplied but last_name and first_name (and 
         optionally birthdate) are supplied, tries to match on that. Not ideal
-        due to nicknames, name changes, players with identical names, etc. If
-        there is not exactly one match, raises an exception. 
+        due to nicknames, name changes, players with identical names, etc. In
+        this case this function will _not_ try to create a new player, but 
+        will raise an exception if no players are found. 
         """
 
         if player_type == 'batter':
@@ -54,23 +55,29 @@ class ProjectionManager(object):
         criteria = {}
         if len(id_clauses) > 0:
             matches = self.query(player_class).filter(or_(*id_clauses)).all()
+            names_only = False
         elif len(name_clauses) > 0:
             matches = self.query(player_class).filter(*name_clauses).all()
+            names_only = True
         else:
             raise Exception('Error: add_or_update_player must be called with '\
                             'at least one id parameter or both last_name and '\
                             'first_name parameters')
 
         if len(matches) > 1:
-            raise Exception('Error: multiple matches found')
+            raise Exception('Error: multiple matches found: %s' % matches)
         elif len(matches) == 1:
             match = matches[0]
             for field, value in kwargs.iteritems():
                 if overwrite or getattr(match, field) is None:
                     setattr(match, field, value)
         else:
-            match = player_class(**kwargs)
-            self.session.add(match)
+            if names_only:
+                raise Exception('Error: could not find player matching '\
+                                'criteria %s' % kwargs)
+            else:
+                match = player_class(**kwargs)
+                self.session.add(match)
 
         self.session.commit()
         return match
@@ -111,7 +118,8 @@ class ProjectionManager(object):
             raise Exception('player_type is %s, must be either '\
                             '"batter" or "pitcher"' % player_type)
 
-        projection_system = self.add_projection_system(projection_name, year, 
+        projection_system = self.add_projection_system('%s_%s' % (projection_name, player_type), 
+                                                       year, 
                                                        is_actual)
         reader = csv.reader(open(filename, 'r'))
         for i in range(skip_rows):
@@ -132,7 +140,10 @@ class ProjectionManager(object):
             if player_type == 'batter':
                 player_data = { x: data[x] for x in add_batter_args if x in data }
                 player_data['player_type'] = 'batter'
-                player = self.add_or_update_player(**player_data)
+                try:
+                    player = self.add_or_update_player(**player_data)
+                except Exception as e:
+                    print e
                 projection_data = { x: data[x] for x in add_batter_projection_args
                                     if x in data }
                 projection_data['batter_id'] = player.id

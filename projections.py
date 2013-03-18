@@ -14,12 +14,18 @@ class MyProjectionManager(pm.ProjectionManager):
         print('Reading PECOTA 2011...')
         self.read_pecota_batters_2011(os.path.join(base_dir, 'Pecota Hitters 2011.csv'), 
                                       verbose=verbose)
+        self.read_pecota_pitchers_2011(os.path.join(base_dir, 'Pecota Pitchers 2011.csv'), 
+                                       verbose=verbose)
         print('Reading PECOTA 2012...')
         self.read_pecota_batters_2012(os.path.join(base_dir, 'Pecota Hitters 2012.csv'),
                                       verbose=verbose)
+        self.read_pecota_pitchers_2012(os.path.join(base_dir, 'Pecota Pitchers 2012.csv'), 
+                                       verbose=verbose)
         print('Reading PECOTA 2013...')
         self.read_pecota_batters_2013(os.path.join(base_dir, 'Pecota Hitters 2013.csv'),
                                       verbose=verbose)
+        self.read_pecota_pitchers_2013(os.path.join(base_dir, 'Pecota Pitchers 2013.csv'), 
+                                       verbose=verbose)
         print('Reading Steamer 2011...')
         self.read_steamer_batters_2011(os.path.join(base_dir, 'Steamer Hitters 2011.csv'),
                                        verbose=verbose)
@@ -46,6 +52,20 @@ class MyProjectionManager(pm.ProjectionManager):
                                  post_processor=helper.batter_post_processor,
                                  verbose=verbose)
 
+    def read_pecota_pitchers_2011(self, filename, verbose=False):
+
+        header_row = ['last_name', 'first_name', 'team', '', '', '', '', '', 
+                      '', 'birthdate', 'w', 'l', 'sv', '', '', 'ip', 'h', 
+                      'hr', 'bb', 'hbp', 'k', '', '', '', '', 'whip', 'era', 
+                      '', '', '', '', '', '', '', '', 'mlb_id',
+                      'retrosheet_id', 'lahman_id']
+        self.read_projection_csv(filename, 'pecota', 2011,
+                                 is_actual=False,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=helper.pitcher_post_processor,
+                                 verbose=verbose)
+
     def read_pecota_batters_2012(self, filename, verbose=False):
 
         header_row = ['bp_id', 'last_name', 'first_name', '', '', '', '', '', 
@@ -58,6 +78,19 @@ class MyProjectionManager(pm.ProjectionManager):
                                  player_type='batter',
                                  header_row=header_row, 
                                  post_processor=helper.batter_post_processor,
+                                 verbose=verbose)
+
+    def read_pecota_pitchers_2012(self, filename, verbose=False):
+
+        header_row = ['bp_id', 'last_name', 'first_name', '', '', '', '', '', 
+                      'team', '', '', '', 'w', 'l', '', 'sv', '', '', 'ip', 
+                      'h', 'hr', 'bb', 'k', '', '', '', '', 'whip', 'era', '', 
+                      '', '', '', '', '', '', '', '', 'mlb_id']
+        self.read_projection_csv(filename, 'pecota', 2012,
+                                 is_actual=False,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=helper.pitcher_post_processor,
                                  verbose=verbose)
 
     def read_pecota_batters_2013(self, filename, verbose=False):
@@ -74,14 +107,26 @@ class MyProjectionManager(pm.ProjectionManager):
                                  post_processor=helper.batter_post_processor,
                                  verbose=verbose)
 
+    def read_pecota_pitchers_2013(self, filename, verbose=False):
+
+        header_row = ['bp_id', 'last_name', 'first_name', '', '', '', '', '', 
+                      'team', '', '', '', 'w', 'l', '', 'sv', '', '', 'ip', 
+                      'h', 'hr', 'bb', 'k', '', '', '', '', 'whip', 'era', '', 
+                      '', '', '', '', '', '', '', '', '', 'mlb_id']
+        self.read_projection_csv(filename, 'pecota', 2013,
+                                 is_actual=False,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=helper.pitcher_post_processor,
+                                 verbose=verbose)
+
     # ZIPS readers
 
     def read_zips_batters_2011(self, filename, verbose=False):
 
-        header_row = ['mlb_id', '', 'last_name', 'first_name', 'team', '', '', 
-                      '', '', '', 'avg', 'obp', 'slg', '', 'ab', 'r', 'h', 
-                      'h2b', 'h3b', 'hr', 'rbi', 'bb', 'k', 'hbp', 'sb', 'cs', 
-                      'sac', 'sf', '', '', '', 'pa']
+        header_row = ['last_name', 'first_name', 'team', '', '', '', '', '', 
+                      'avg', 'obp', 'slg', '', 'ab', 'r', 'h', 'h2b', 'h3b', 
+                      'hr', 'rbi', 'bb', 'k', 'hbp', 'sb', 'cs', 'sac', 'sf']
         self.read_projection_csv(filename, 'zips', 2011, 
                                  is_actual=False,
                                  player_type='batter',
