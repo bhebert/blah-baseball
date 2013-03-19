@@ -64,7 +64,7 @@ class ProjectionManager(object):
         elif len(matches) == 1:
             match = matches[0]
             for field, value in kwargs.iteritems():
-                if overwrite or getattr(match, field) is None:
+                if overwrite or getattr(match, field) is None or getattr(match, field) == '':
                     setattr(match, field, value)
         else:
             if names_only:
