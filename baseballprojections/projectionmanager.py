@@ -165,3 +165,5 @@ class ProjectionManager(object):
 
     def rollback(self):
         return self.session.rollback()
+
+    # csv generation

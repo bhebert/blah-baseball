@@ -44,6 +44,13 @@ class MyProjectionManager(pm.ProjectionManager):
         print('Reading ZIPS 2011...')
         self.read_zips_batters_2011(os.path.join(base_dir, 'ZIPS Hitters 2011.csv'),
                                     verbose=verbose)
+        print('Reading ZIPS 2012...')
+        self.read_zips_batters_2012(os.path.join(base_dir, 'ZIPS Hitters 2012.csv'),
+                                    verbose=verbose)
+        print('Reading ZIPS 2013...')
+        self.read_zips_batters_2013(os.path.join(base_dir, 'ZIPS Hitters 2013.csv'),
+                                    verbose=verbose)
+
 
     # PECOTA readers
 
@@ -133,10 +140,10 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_zips_batters_2011(self, filename, verbose=False):
 
-        header_row = ['last_name', 'first_name', 'mlb_id', 'team', '', '', '', 
-                      '', '', 'avg', 'obp', 'slg', '', 'ab', 'r', 'h', 'h2b', 
-                      'h3b', 'hr', 'rbi', 'bb', 'k', 'hbp', 'sb', 'cs', 'sac', 
-                      'sf']
+        header_row = ['mlb_id', 'full_name', 'last_name', 'first_name', 'team', 
+                      '', '', '', '', '', 'avg', 'obp', 'slg', '', 'ab', 'r', 
+                      'h', 'h2b', 'h3b', 'hr', 'rbi', 'bb', 'k', 'hbp', 'sb', 
+                      'cs', 'sac', 'sf', '', '', '', 'pa']
         self.read_projection_csv(filename, 'zips', 2011, 
                                  is_actual=False,
                                  player_type='batter',
