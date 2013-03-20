@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 import csv
 import datetime
 import inspect
+import itertools
 
 Session = sessionmaker()
 
@@ -167,3 +168,21 @@ class ProjectionManager(object):
         return self.session.rollback()
 
     # csv generation
+
+    def batter_projection_groups(self, filter_clause=None):
+
+        q = self.query(BatterProjection, Batter)
+        if filter_clause is not None:
+            q = q.filter(filter_clause)
+        q = q.order_by(Batter.id)
+        return itertools.groupby(q, lambda x: x[1])
+
+    def batter_projection_csv(self, csvfile, stats, filter_clause=None):
+
+        systems = self.query(ProjectionSystem).filter(filter_clause)
+        system_labels = map(lambda x: "%s_%d" % (x.name, x.year), systems)
+        stat_labels = itertools.product(system_labels, stats).
+
+        groups = self.batter_projection_groups(filter_clause=filter_clause)
+        with open(csvfile, 'w') as f:
+            writer = csv.writer(f)
