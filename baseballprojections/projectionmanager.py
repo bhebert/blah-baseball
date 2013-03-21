@@ -155,7 +155,11 @@ class ProjectionManager(object):
             else:
                 player_data = { x: data[x] for x in add_pitcher_args if x in data }
                 player_data['player_type'] = 'pitcher'
-                player = self.add_or_update_player(**player_data)
+                try:
+                    player = self.add_or_update_player(**player_data)
+                except Exception as e:
+                    if verbose:
+                        print e
                 projection_data = { x: data[x] for x in add_pitcher_projection_args
                                     if x in data }
                 projection_data['pitcher_id'] = player.id

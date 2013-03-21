@@ -42,12 +42,18 @@ class MyProjectionManager(pm.ProjectionManager):
         print('Reading ZIPS 2011...')
         self.read_zips_batters_2011(os.path.join(base_dir, 'ZIPS Hitters 2011.csv'),
                                     verbose=verbose)
+        self.read_zips_pitchers_2011(os.path.join(base_dir, 'ZIPS Pitchers 2011.csv'),
+                                     verbose=verbose)
         print('Reading ZIPS 2012...')
         self.read_zips_batters_2012(os.path.join(base_dir, 'ZIPS Hitters 2012.csv'),
                                     verbose=verbose)
+        self.read_zips_pitchers_2012(os.path.join(base_dir, 'ZIPS Pitchers 2012.csv'),
+                                     verbose=verbose)
         print('Reading ZIPS 2013...')
         self.read_zips_batters_2013(os.path.join(base_dir, 'ZIPS Hitters 2013.csv'),
                                     verbose=verbose)
+        self.read_zips_pitchers_2013(os.path.join(base_dir, 'ZIPS Pitchers 2013.csv'),
+                                     verbose=verbose)
 
 
     # PECOTA readers
@@ -149,6 +155,18 @@ class MyProjectionManager(pm.ProjectionManager):
                                  post_processor=helper.batter_post_processor,
                                  verbose=verbose)
 
+    def read_zips_pitchers_2011(self, filename, verbose=False):
+
+        header_row = ['mlb_id', 'full_name', 'last_name', 'first_name', 'team', 
+                      '', '', '', 'w', 'l', 'era', '', '', 'ip', 'h', 'r', 
+                      'er', 'hr', 'bb', 'k', 'wp', '', 'hbp']
+        self.read_projection_csv(filename, 'zips', 2011, 
+                                 is_actual=False,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=helper.batter_post_processor,
+                                 verbose=verbose)
+
     def read_zips_batters_2012(self, filename, verbose=False):
 
         header_row = ['mlb_id', 'full_name', 'team', '', '', '', 'avg', 'obp', 
@@ -161,6 +179,18 @@ class MyProjectionManager(pm.ProjectionManager):
                                  post_processor=helper.batter_post_processor,
                                  verbose=verbose)
 
+    def read_zips_pitchers_2012(self, filename, verbose=False):
+
+        header_row = ['mlb_id', 'full_name', 'team', '', '', 'w', 'l', 'era', 
+                      '', '', 'ip', 'h', 'r', 'er', 'hr', 'bb', 'k', 'wp', '', 
+                      'hbp']
+        self.read_projection_csv(filename, 'zips', 2012, 
+                                 is_actual=False,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=helper.batter_post_processor,
+                                 verbose=verbose)
+
     def read_zips_batters_2013(self, filename, verbose=False):
 
         header_row = ['mlb_id', 'full_name', 'team', '', '', '', 'avg', 'obp', 
@@ -169,6 +199,18 @@ class MyProjectionManager(pm.ProjectionManager):
         self.read_projection_csv(filename, 'zips', 2013, 
                                  is_actual=False,
                                  player_type='batter',
+                                 header_row=header_row, 
+                                 post_processor=helper.batter_post_processor,
+                                 verbose=verbose)
+
+    def read_zips_pitchers_2013(self, filename, verbose=False):
+
+        header_row = ['mlb_id', 'full_name', 'team', '', '', 'w', 'l', 'era', 
+                      '', '', 'ip', 'h', 'r', 'er', 'hr', 'bb', 'k', 'wp', '', 
+                      'hbp']
+        self.read_projection_csv(filename, 'zips', 2013, 
+                                 is_actual=False,
+                                 player_type='pitcher',
                                  header_row=header_row, 
                                  post_processor=helper.batter_post_processor,
                                  verbose=verbose)
