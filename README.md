@@ -75,9 +75,4 @@ To generate a cross-projection CSV, for example for OBP and HR of batters with l
 
     > x.cross_projection_csv('molina.csv', 'batter', ['obp', 'hr'], filter_clause=Batter.last_name.like("Molina"), verbose=True)
 
-This generates a file that looks like the `molina.csv` file included in the repo. 
-
-### To-do
-
-- Actuals
-- Rewrite this README
+This generates a file that looks like the `molina.csv` file included in the repo. The filter clause is optional, omitting it in the above example would have generated the file for all batters. 
