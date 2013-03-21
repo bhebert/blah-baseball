@@ -78,14 +78,18 @@ class ProjectionManager(object):
         self.session.commit()
         return match
 
-    def add_projection_system(self, name, year, is_actual):
+    def add_or_update_projection_system(self, name, year, is_actual):
         """
         Add a projection system to the database. 
         """
-        projection_system = ProjectionSystem(name=name, year=year, 
-                                             is_actual=is_actual)
-        self.session.add(projection_system)
-        self.session.commit()
+        projection_system = self.query(ProjectionSystem).\
+                                 filter(ProjectionSystem.name == name and ProjectionSystem.year == year).\
+                                 first()
+        if projection_system is None:
+            projection_system = ProjectionSystem(name=name, year=year, 
+                                                 is_actual=is_actual)
+            self.session.add(projection_system)
+            self.session.commit()
         return projection_system
 
     def add_batter_projection(self, **kwargs):
@@ -114,9 +118,9 @@ class ProjectionManager(object):
             raise Exception('player_type is %s, must be either '\
                             '"batter" or "pitcher"' % player_type)
 
-        projection_system = self.add_projection_system('%s_%s' % (projection_name, player_type), 
-                                                       year, 
-                                                       is_actual)
+        projection_system = self.add_or_update_projection_system('%s' % projection_name, 
+                                                                 year, 
+                                                                 is_actual)
         reader = csv.reader(open(filename, 'r'))
         for i in range(skip_rows):
             reader.next()
@@ -139,7 +143,8 @@ class ProjectionManager(object):
                 try:
                     player = self.add_or_update_player(**player_data)
                 except Exception as e:
-                    print e
+                    if verbose:
+                        print e
                 projection_data = { x: data[x] for x in add_batter_projection_args
                                     if x in data }
                 projection_data['batter_id'] = player.id
@@ -181,7 +186,7 @@ class ProjectionManager(object):
 
         systems = self.query(ProjectionSystem).filter(filter_clause)
         system_labels = map(lambda x: "%s_%d" % (x.name, x.year), systems)
-        stat_labels = itertools.product(system_labels, stats).
+        #stat_labels = itertools.product(system_labels, stats).
 
         groups = self.batter_projection_groups(filter_clause=filter_clause)
         with open(csvfile, 'w') as f:

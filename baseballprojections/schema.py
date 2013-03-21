@@ -59,9 +59,11 @@ class Batter(Player):
 
     def prettyprint(self):
         super(Batter, self).prettyprint()
-        print('Projections (OBP SLG HR R RBI SB): ')
+        print
+        print('%26s : %5s %5s %3s %3s %3s %3s' % \
+              ('Projection', 'OBP', 'SLG', 'HR', 'R', 'RBI', 'SB'))
         for proj in self.projections:
-            print('%20s, %4d : %.3f %.3f %3d %3d %3d %3d' % \
+            print('%20s, %4d : %5.3f %5.3f %3d %3d %3d %3d' % \
                   (proj.projection_system.name, proj.projection_system.year, 
                    proj.obp, proj.slg, proj.hr, proj.r, proj.rbi, proj.sb))
 
@@ -80,9 +82,11 @@ class Pitcher(Player):
 
     def prettyprint(self):
         super(Pitcher, self).prettyprint()
-        print('Projections (W SV ERA K WHIP IP): ')
+        print
+        print('%26s : %3s %3s %5s %3s %5s %5s' % \
+              ('Projection', 'W', 'SV', 'ERA', 'K', 'WHIP', 'IP'))
         for proj in self.projections:
-            print('%20s, %4d : %3d %3d %.2f %3d %.3f %.1f' % \
+            print('%20s, %4d : %3d %3d %5.2f %3d %5.3f %5.1f' % \
                   (proj.projection_system.name, proj.projection_system.year, 
                    proj.w, proj.sv, proj.era, proj.k, proj.whip, proj.ip))
 
