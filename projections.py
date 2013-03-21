@@ -7,9 +7,7 @@ class MyProjectionManager(pm.ProjectionManager):
 
     # Hardcoded function to read everything
 
-    def read_everything_csv(self, verbose=False):
-
-        base_dir = '/Users/andrew_lim/Dropbox/Baseball/CSVs for DB'
+    def read_everything_csv(self, base_dir, verbose=False):
 
         print('Reading PECOTA 2011...')
         self.read_pecota_batters_2011(os.path.join(base_dir, 'Pecota Hitters 2011.csv'), 
