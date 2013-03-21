@@ -83,7 +83,8 @@ class ProjectionManager(object):
         Add a projection system to the database. 
         """
         projection_system = self.query(ProjectionSystem).\
-                                 filter(ProjectionSystem.name == name and ProjectionSystem.year == year).\
+                                 filter(ProjectionSystem.name == name).\
+                                 filter(ProjectionSystem.year == year).\
                                  first()
         if projection_system is None:
             projection_system = ProjectionSystem(name=name, year=year, 
@@ -176,18 +177,57 @@ class ProjectionManager(object):
 
     def batter_projection_groups(self, filter_clause=None):
 
-        q = self.query(BatterProjection, Batter)
+        q = self.query(Batter, BatterProjection).\
+                 join(BatterProjection)
         if filter_clause is not None:
             q = q.filter(filter_clause)
         q = q.order_by(Batter.id)
-        return itertools.groupby(q, lambda x: x[1])
+        return itertools.groupby(q, lambda x: x[0])
 
-    def batter_projection_csv(self, csvfile, stats, filter_clause=None):
+    def pitcher_projection_groups(self, filter_clause=None):
 
-        systems = self.query(ProjectionSystem).filter(filter_clause)
-        system_labels = map(lambda x: "%s_%d" % (x.name, x.year), systems)
-        #stat_labels = itertools.product(system_labels, stats).
+        q = self.query(Pitcher, PitcherProjection).\
+                 join(PitcherProjection)
+        if filter_clause is not None:
+            q = q.filter(filter_clause)
+        q = q.order_by(Pitcher.id)
+        return itertools.groupby(q, lambda x: x[0])
 
-        groups = self.batter_projection_groups(filter_clause=filter_clause)
+    def cross_projection_csv(self, csvfile, player_type, stats, 
+                             filter_clause=None, verbose=False):
+
+        if player_type == 'batter':
+            player_class = Batter
+        elif player_type == 'pitcher':
+            player_class = Pitcher
+        else:
+            raise Exception('Error: cross_projection_csv must be called with '\
+                            'player_type = either "batter" or "pitcher"')
+
+        systems = self.query(ProjectionSystem).\
+                       order_by(ProjectionSystem.name, ProjectionSystem.year)
+        statcols = itertools.product(stats, systems)
+        statcols = ["%s_%d_%s" % (system.name, system.year, stat)
+                    for stat, system in statcols]
+        cols = ['last_name', 'first_name', 'mlb_id']
+        cols.extend(statcols)
+
+        if player_type == 'batter':
+            players = self.batter_projection_groups(filter_clause=filter_clause)
+        else:
+            players = self.pitcher_projection_groups(filter_clause=filter_clause)
+
         with open(csvfile, 'w') as f:
-            writer = csv.writer(f)
+            writer = csv.DictWriter(f, cols)
+            writer.writeheader()
+            for player, pairs in players:
+                if verbose: print player
+                row = { 'last_name': player.last_name,
+                        'first_name': player.first_name,
+                        'mlb_id': player.mlb_id }
+                for (_, projection) in pairs:
+                    system = projection.projection_system
+                    for stat in stats:
+                        col = "%s_%d_%s" % (system.name, system.year, stat)
+                        row[col] = getattr(projection, stat)
+                writer.writerow(row)
