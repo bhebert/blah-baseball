@@ -182,7 +182,7 @@ class ProjectionManager(object):
     def batter_projection_groups(self, filter_clause=None):
 
         q = self.query(Batter, BatterProjection).\
-                 join(BatterProjection)
+                 join(BatterProjection).join(ProjectionSystem)
         if filter_clause is not None:
             q = q.filter(filter_clause)
         q = q.order_by(Batter.id)
@@ -191,7 +191,7 @@ class ProjectionManager(object):
     def pitcher_projection_groups(self, filter_clause=None):
 
         q = self.query(Pitcher, PitcherProjection).\
-                 join(PitcherProjection)
+                 join(PitcherProjection).join(ProjectionSystem)
         if filter_clause is not None:
             q = q.filter(filter_clause)
         q = q.order_by(Pitcher.id)

@@ -54,19 +54,19 @@ class MyProjectionManager(pm.ProjectionManager):
                                     verbose=verbose)
         self.read_zips_pitchers_2013(os.path.join(base_dir, 'ZIPS Pitchers 2013.csv'),
                                      verbose=verbose)
-        print('Reading Actuals hitters 2011...')
-        self.read_actuals_batters_2011(os.path.join(base_dir, 'Actuals 2011.csv'),
+        print('Reading Actuals 2011...')
+        self.read_actuals_batters_2011(os.path.join(base_dir, 'Actuals Hitters 2011.csv'),
                                     verbose=verbose)
-        print('Reading Actuals hitters 2012')
-        self.read_actuals_batters_2012(os.path.join(base_dir, 'Actuals 2012.csv'),
+        print('Reading Actuals 2012...')
+        self.read_actuals_batters_2012(os.path.join(base_dir, 'Actuals Hitters 2012.csv'),
                                     verbose=verbose)
 
     # Actuals Readers
     
     def read_actuals_batters_2011(self, filename, verbose=False):
 
-        header_row = ['mlb_id','full_name', 'team', '', 'pa', 'ab', 'r', 'rbi', 'sb', 
-                      'obp', 'slg', 'cs', 'rookie', '']
+        header_row = ['mlb_id','full_name', 'team', '', 'pa', 'ab', 'r', 'rbi', 
+                      'sb', 'obp', 'slg', 'cs', 'rookie', '']
         self.read_projection_csv(filename, 'actual', 2011,
                                  is_actual=True,
                                  player_type='batter',
