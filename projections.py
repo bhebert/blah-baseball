@@ -56,16 +56,20 @@ class MyProjectionManager(pm.ProjectionManager):
                                      verbose=verbose)
         print('Reading Actuals 2011...')
         self.read_actuals_batters_2011(os.path.join(base_dir, 'Actuals Hitters 2011.csv'),
-                                    verbose=verbose)
+                                       verbose=verbose)
+        self.read_actuals_pitchers_2011(os.path.join(base_dir, 'Actuals Pitchers 2011.csv'),
+                                        verbose=verbose)
         print('Reading Actuals 2012...')
         self.read_actuals_batters_2012(os.path.join(base_dir, 'Actuals Hitters 2012.csv'),
-                                    verbose=verbose)
+                                       verbose=verbose)
+        self.read_actuals_pitchers_2012(os.path.join(base_dir, 'Actuals Pitchers 2012.csv'),
+                                        verbose=verbose)
 
-    # Actuals Readers
+    # Actuals readers
     
     def read_actuals_batters_2011(self, filename, verbose=False):
 
-        header_row = ['mlb_id','full_name', 'team', '', 'pa', 'ab', 'r', 'rbi', 
+        header_row = ['mlb_id', 'full_name', 'team', '', 'pa', 'ab', 'r', 'rbi', 
                       'sb', 'obp', 'slg', 'cs', 'rookie', '']
         self.read_projection_csv(filename, 'actual', 2011,
                                  is_actual=True,
@@ -74,15 +78,37 @@ class MyProjectionManager(pm.ProjectionManager):
                                  post_processor=helper.batter_post_processor,
                                  verbose=verbose)
 
+    def read_actuals_pitchers_2011(self, filename, verbose=False):
+
+        header_row = ['mlb_id', 'full_name', 'team', 'w', 'sv', '', '', 'ip', 
+                      'era', 'k9', 'h', 'bb', '', '']
+        self.read_projection_csv(filename, 'actual', 2011,
+                                 is_actual=True,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=actual_pitcher_post_processor,
+                                 verbose=verbose)
+
     def read_actuals_batters_2012(self, filename, verbose=False):
 
-        header_row = ['mlb_id','full_name', 'team', 'age','', 'pa', 'ab','obp','slg','r', 'rbi', 'sb', 
-                      'cs', 'rookie', '']
+        header_row = ['mlb_id', 'full_name', 'team', 'age', '', 'pa', 'ab', 
+                      'obp', 'slg', 'r', 'rbi', 'sb', 'cs', 'rookie', '']
         self.read_projection_csv(filename, 'actual', 2012,
                                  is_actual=True,
                                  player_type='batter',
                                  header_row=header_row, 
                                  post_processor=helper.batter_post_processor,
+                                 verbose=verbose)
+
+    def read_actuals_pitchers_2012(self, filename, verbose=False):
+
+        header_row = ['mlb_id', 'full_name', 'team', 'w', 'sv', '', '', 'ip', 
+                      'era', 'k9', 'h', 'bb', '', 'hbp', '', '']
+        self.read_projection_csv(filename, 'actual', 2012,
+                                 is_actual=True,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=actual_pitcher_post_processor,
                                  verbose=verbose)
 
     # PECOTA readers
@@ -323,6 +349,14 @@ class MyProjectionManager(pm.ProjectionManager):
                                  header_row=header_row, 
                                  post_processor=steamer2013_post_processor,
                                  verbose=verbose)
+
+def actual_pitcher_post_processor(x):
+    '''
+    Convert K/9 to K
+    '''
+    try: x['k'] = float(x['k9']) / 9.0 * float(x['ip'])
+    except: pass
+    return helper.pitcher_post_processor(x)
 
 def steamer2013_post_processor(x):
     '''
