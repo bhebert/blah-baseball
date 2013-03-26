@@ -148,6 +148,7 @@ class BatterProjection(Base):
     avg = Column(Float)
     obp = Column(Float)
     slg = Column(Float)
+    positions = Column(String(20))
 
     def __repr__(self):
         return '<BatterProjection %d>' % (self.id)

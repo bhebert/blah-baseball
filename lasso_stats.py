@@ -6,18 +6,18 @@ import random
 import csv
 
 base_dir = "C:\\Users\\Benjamin\\Dropbox\\Baseball\\CSVs for DB"
+#base_dir = "/Users/andrew_lim/Dropbox/Baseball/CSVs for DB"
 csvfile = "HitterProjs.csv"
-#base_dir = "C:\\Users\\bhebert\\Dropbox\\Baseball\\CSVs for DB"
-#base_dir = "~/Dropbox/Baseball/CSVs for DB"
 
 pm = MyProjectionManager('sqlite:///projections.db')
 #pm = MyProjectionManager()
-pm.read_everything_csv(base_dir = base_dir)
+#pm.read_everything_csv(base_dir = base_dir)
 
 player_type = 'batter'
 playing_time = 'pa'
-stats = ['pa','ab','obp', 'slg','sb','cs','r', 'rbi']
-num_systems = 3
+stats = ['pa', 'ab', 'obp', 'slg','sb', 'cs', 'r', 'rbi']
+proj_systems = ['pecota', 'zips', 'steamer']
+
 cv_num = 20
 min_pt = 300
 
@@ -47,8 +47,12 @@ for player, pairs in players:
 
 # This makes a model for choosing the sample    
 
-pt_projs = pm.get_proj_data(proj_years,player_type,playing_time)
-pt_actuals = pm.get_actual_data(proj_years,player_type,playing_time)
+pt_projs = pm.get_player_year_data(proj_years, proj_systems,
+                                   player_type, playing_time)
+pt_actuals = pm.get_player_year_data(proj_years, ['actual'],
+                                     player_type, playing_time)
+#pt_projs = pm.get_proj_data(proj_years,player_type,playing_time)
+#pt_actuals = pm.get_actual_data(proj_years,player_type,playing_time)
 
 player_years = list(set(pt_actuals.keys()) & set(pt_projs.keys()))
 random.shuffle(player_years)
@@ -57,8 +61,10 @@ ivars = []
 depvars = []
 
 for pyear in player_years:
-        ivars.append(pt_projs[pyear])
-        depvars.append(pt_actuals[pyear])
+    ivars.append([pt_projs[pyear][system] for system in proj_systems])
+    depvars.append(pt_actuals[pyear]['actual'])
+    #ivars.append(pt_projs[pyear])
+    #depvars.append(pt_actuals[pyear])
 
 x = numpy.array(ivars)
 y = numpy.array(depvars)
@@ -81,8 +87,13 @@ ivars = {}
 depvars = {}
 
 for stat in stats:
-    projs = pm.get_proj_data(proj_years,player_type,stat)
-    actuals = pm.get_actual_data(proj_years,player_type,stat)
+
+    projs = pm.get_player_year_data(proj_years, proj_systems,
+                                    player_type, playing_time)
+    actuals = pm.get_player_year_data(proj_years, proj_systems,
+                                      player_type, playing_time)
+    #projs = pm.get_proj_data(proj_years,player_type,stat)
+    #actuals = pm.get_actual_data(proj_years,player_type,stat)
 
     player_years = list(set(actuals.keys()) & set(projs.keys()))
 
@@ -94,8 +105,10 @@ for stat in stats:
     depvars[stat] = []
 
     for pyear in fp_years:
-            ivars[stat].append(projs[pyear])
-            depvars[stat].append(actuals[pyear])
+        ivars[stat].append([pt_projs[pyear][system] for system in proj_systems])
+        depvars[stat].append(pt_actuals[pyear]['actual'])
+        #ivars[stat].append(projs[pyear])
+        #depvars[stat].append(actuals[pyear])
 
     x = numpy.array(ivars[stat])
     y = numpy.array(depvars[stat])
@@ -111,14 +124,18 @@ for stat in stats:
 ivars2 = {}
 
 for stat in stats:
-    projs = pm.get_proj_data([curr_year],player_type,stat)
+    
+    projs = pm.get_player_year_data([curr_year], proj_systems, 
+                                    player_type, stat)
+    #projs = pm.get_proj_data([curr_year],player_type,stat)
 
     player_years = projs.keys()
 
     ivars2[stat] = []
 
     for pyear in player_years:
-            ivars2[stat].append(projs[pyear])
+        ivars2[stat].append([projs[pyear][system] for system in proj_systems])
+        #ivars2[stat].append(projs[pyear])
  
     x = numpy.array(ivars2[stat])
 
@@ -129,18 +146,19 @@ for stat in stats:
 cols = ['mlb_id','last_name','first_name','positions']
 cols.extend(stats)
 
-with open(csvfile, 'wb') as f:
-            writer = csv.DictWriter(f, cols)
-            writer.writeheader()
+#with open(csvfile, 'wb') as f:
+with open(csvfile, 'w') as f:
+    writer = csv.DictWriter(f, cols)
+    writer.writeheader()
 
-            for k in player_years:
-                row = {'mlb_id': mlb_ids[k] ,
-                       'first_name': first_names[k],
-                       'last_name': last_names[k],
-                       'positions': positions[k],
-                       }
-                for stat in stats:
-                    row[stat] = final_projs[stat][k]
-                writer.writerow(row)
+    for k in player_years:
+        row = {'mlb_id': mlb_ids[k] ,
+               'first_name': first_names[k],
+               'last_name': last_names[k],
+               'positions': positions[k],
+               }
+        for stat in stats:
+            row[stat] = final_projs[stat][k]
+        writer.writerow(row)
                 
     
