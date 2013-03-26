@@ -204,7 +204,7 @@ class ProjectionManager(object):
 
         proj_data = {}
         if stat_function is None:
-            stat_function = lambda projection, stat: getattr(projection, stat)
+            stat_function = lambda projection: getattr(projection, stat)
 
         for year in years:
 
@@ -223,7 +223,7 @@ class ProjectionManager(object):
                 for (_, projection) in pair:
                     sys = projection.projection_system
                     if sys.name in projs:
-                        projs[sys.name] = stat_function(projection, stat)
+                        projs[sys.name] = stat_function(projection)
 
                 if not any(map(lambda x: x is None, projs.values())):
                     #print "ADDING %s, %s: %s" % (player.last_name, player.first_name, projs)

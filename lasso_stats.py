@@ -146,8 +146,8 @@ for stat in stats:
 cols = ['mlb_id','last_name','first_name','positions']
 cols.extend(stats)
 
-#with open(csvfile, 'wb') as f:
-with open(csvfile, 'w') as f:
+with open(csvfile, 'wb') as f:
+#with open(csvfile, 'w') as f:
     writer = csv.DictWriter(f, cols)
     writer.writeheader()
 
