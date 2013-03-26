@@ -1,6 +1,6 @@
 from helper import getSQLAlchemyFields
 from schema import *
-from sqlalchemy import create_engine, or_
+from sqlalchemy import create_engine, or_, and_
 from sqlalchemy.orm import sessionmaker
 import csv
 import datetime
@@ -47,13 +47,13 @@ class ProjectionManager(object):
         name_clauses = [ (getattr(player_class, k) == kwargs[k])
                          for k in Player.name_fields()
                          if (k in kwargs and kwargs[k] != '') ]
-
+        
         criteria = {}
         if len(id_clauses) > 0:
             matches = self.query(player_class).filter(or_(*id_clauses)).all()
             names_only = False
         elif len(name_clauses) > 0:
-            matches = self.query(player_class).filter(*name_clauses).all()
+            matches = self.query(player_class).filter(and_(*name_clauses)).all()
             names_only = True
         else:
             raise Exception('Error: add_or_update_player must be called with '\
@@ -143,28 +143,28 @@ class ProjectionManager(object):
                 player_data['player_type'] = 'batter'
                 try:
                     player = self.add_or_update_player(**player_data)
+                    projection_data = { x: data[x] for x in add_batter_projection_args
+                                        if x in data }
+                    projection_data['batter_id'] = player.id
+                    projection_data['projection_system_id'] = projection_system.id
+                    projection = self.add_batter_projection(**projection_data)
                 except Exception as e:
                     if verbose:
                         print e
-                projection_data = { x: data[x] for x in add_batter_projection_args
-                                    if x in data }
-                projection_data['batter_id'] = player.id
-                projection_data['projection_system_id'] = projection_system.id
-                projection = self.add_batter_projection(**projection_data)
 
             else:
                 player_data = { x: data[x] for x in add_pitcher_args if x in data }
                 player_data['player_type'] = 'pitcher'
                 try:
                     player = self.add_or_update_player(**player_data)
+                    projection_data = { x: data[x] for x in add_pitcher_projection_args
+                                        if x in data }
+                    projection_data['pitcher_id'] = player.id
+                    projection_data['projection_system_id'] = projection_system.id
+                    projection = self.add_pitcher_projection(**projection_data)
                 except Exception as e:
                     if verbose:
                         print e
-                projection_data = { x: data[x] for x in add_pitcher_projection_args
-                                    if x in data }
-                projection_data['pitcher_id'] = player.id
-                projection_data['projection_system_id'] = projection_system.id
-                projection = self.add_pitcher_projection(**projection_data)
 
             if verbose:
                 print('%s, %s' % (player, projection))
