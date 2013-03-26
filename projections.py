@@ -70,7 +70,7 @@ class MyProjectionManager(pm.ProjectionManager):
     def read_actuals_batters_2011(self, filename, verbose=False):
 
         header_row = ['mlb_id', 'full_name', 'team', '', 'pa', 'ab', 'r', 'rbi', 
-                      'sb', 'obp', 'slg', 'cs', 'rookie', '']
+                      'obp', 'slg', 'sb', 'cs', 'rookie', '']
         self.read_projection_csv(filename, 'actual', 2011,
                                  is_actual=True,
                                  player_type='batter',
@@ -326,7 +326,7 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_steamer_batters_2013(self, filename, verbose=False):
 
-        header_row = ['steamer_id', 'mlb_id', 'first_name', 'last_name', '', 
+        header_row = ['steamer_id', 'mlb_id', 'first_name', 'last_name', 'positions', 
                       '', '', 'team', 'pa', '', '', 'bb', 'k', 'hbp', '', 
                       'sac', 'sf', 'ab', 'h', 'h1b', 'h2b', 'h3b', 'hr', 'avg',
                       'obp', 'slg', '', 'sb', 'cs', 'r', 'rbi']
