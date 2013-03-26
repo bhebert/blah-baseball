@@ -15,7 +15,7 @@ pm = MyProjectionManager('sqlite:///projections.db')
 
 player_type = 'batter'
 playing_time = 'pa'
-stats = ['pa', 'ab', 'obp', 'slg','sb', 'cs', 'r', 'rbi']
+stats = ['pa', 'ab', 'obp', 'slg', 'sb', 'cs', 'r', 'rbi', 'ops']
 proj_systems = ['pecota', 'zips', 'steamer']
 
 cv_num = 20
@@ -23,6 +23,15 @@ min_pt = 300
 
 proj_years = [2011, 2012]
 curr_year = 2013
+
+stat_functions = { stat: None for stat in stats }
+def stat_ops(p):
+    if p.obp is not None and p.slg is not None:
+        return p.obp + p.slg
+    else:
+        return None
+stat_functions['ops'] = stat_ops
+
 
 # This is the sample of players to forecast
 if player_type == 'batter':
@@ -48,9 +57,11 @@ for player, pairs in players:
 # This makes a model for choosing the sample    
 
 pt_projs = pm.get_player_year_data(proj_years, proj_systems,
-                                   player_type, playing_time)
+                                   player_type, playing_time,
+                                   stat_functions[playing_time])
 pt_actuals = pm.get_player_year_data(proj_years, ['actual'],
-                                     player_type, playing_time)
+                                     player_type, playing_time,
+                                     stat_functions[playing_time])
 
 player_years = list(set(pt_actuals.keys()) & set(pt_projs.keys()))
 random.shuffle(player_years)
@@ -85,9 +96,11 @@ depvars = {}
 for stat in stats:
 
     projs = pm.get_player_year_data(proj_years, proj_systems,
-                                    player_type, stat)
+                                    player_type, stat,
+                                    stat_functions[stat])
     actuals = pm.get_player_year_data(proj_years, ['actual'],
-                                      player_type, stat)
+                                      player_type, stat,
+                                      stat_functions[stat])
 
     player_years = list(set(actuals.keys()) & set(projs.keys()))
     fp_years = filter(lambda k: k in sample_proj_pt and sample_proj_pt[k] > min_pt, player_years)
@@ -116,7 +129,8 @@ ivars2 = {}
 for stat in stats:
     
     projs = pm.get_player_year_data([curr_year], proj_systems, 
-                                    player_type, stat)
+                                    player_type, stat, 
+                                    stat_functions[stat])
 
     player_years = projs.keys()
 
@@ -136,6 +150,9 @@ with open(csvfile, 'wb') as f:
     writer = csv.DictWriter(f, cols)
     writer.writeheader()
 
+    player_years.sort(key=lambda k: final_projs['pa'][k])
+    player_years.reverse()
+
     for k in player_years:
         row = {'mlb_id': mlb_ids[k] ,
                'first_name': first_names[k],
@@ -145,5 +162,3 @@ with open(csvfile, 'wb') as f:
         for stat in stats:
             row[stat] = final_projs[stat][k]
         writer.writerow(row)
-                
-    
