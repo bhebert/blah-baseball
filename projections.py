@@ -344,7 +344,7 @@ def actual_pitcher_post_processor(x):
     '''
     try: x['k'] = float(x['k9']) / 9.0 * float(x['ip'])
     except: pass
-    return helper.pitcher_post_processor(x)
+    return helper.pitcher_post_processor_with_ip_fix(x)
 
 def steamer2013_post_processor(x):
     '''

@@ -1,91 +1,146 @@
 from projections import *
 from sklearn.linear_model import LassoLarsCV
 import numpy
+import numpy.ma
 import random
+import csv
 
+base_dir = "C:\\Users\\Benjamin\\Dropbox\\Baseball\\CSVs for DB"
+csvfile = "HitterProjs.csv"
 #base_dir = "C:\\Users\\bhebert\\Dropbox\\Baseball\\CSVs for DB"
-base_dir = "~/Dropbox/Baseball/CSVs for DB"
+#base_dir = "~/Dropbox/Baseball/CSVs for DB"
 
 pm = MyProjectionManager('sqlite:///projections.db')
-#pm.read_everything_csv(base_dir = base_dir)
+#pm = MyProjectionManager()
+pm.read_everything_csv(base_dir = base_dir)
 
-stats = ['obp', 'slg', 'r', 'rbi', 'sb']
-wstat = 'pa'
-num_projs = 3
-min_weight = 400
-years = [2011, 2012, 2013]
+player_type = 'batter'
+playing_time = 'pa'
+stats = ['pa','ab','obp', 'slg','sb','cs','r', 'rbi']
+num_systems = 3
+cv_num = 20
+min_pt = 300
 
-ivars = {}
-depvars = {}
-weights = {}
-projids = {}
-projvars = {}
+proj_years = [2011, 2012]
+curr_year = 2013
 
-for stat in stats:
-    ivars[stat] = []
-    depvars[stat] = []
-    weights[stat] = []
-    projids[stat] = []
-    projvars[stat] = []
+# This is the sample of players to forecast
+if player_type == 'batter':
+    players = pm.batter_projection_groups(filter_clause=ProjectionSystem.year==curr_year)
+else:
+    players = pm.pitcher_projection_groups(filter_clause=ProjectionSystem.year==curr_year)
 
-for year in years:
-    players = pm.batter_projection_groups(filter_clause=ProjectionSystem.year==year)
+first_names = {}
+last_names = {}
+mlb_ids = {}
+positions = {}
+for player, pairs in players:
+    key = str(player.mlb_id) + "_" + str(curr_year)
+    first_names[key] = player.first_name
+    last_names[key] = player.last_name
+    mlb_ids[key] = player.mlb_id
+    for (_, projection) in pairs:
+        sys = projection.projection_system
+        if sys.name == 'steamer' :
+            positions[key] = getattr(projection,'positions')
 
-    for player, pairs in players:
 
-        projs = {}
-        depvar = {}
-        weight = {}
-        for stat in stats:
-            projs[stat] = [-1, -1, -1]
-            depvar[stat] = -1
-            weight[stat] = -1
+# This makes a model for choosing the sample    
 
-        for (_, projection) in pairs:
-            sys = projection.projection_system
+pt_projs = pm.get_proj_data(proj_years,player_type,playing_time)
+pt_actuals = pm.get_actual_data(proj_years,player_type,playing_time)
 
-            for stat in stats:
-                if sys.is_actual:
-                    depvar[stat] = getattr(projection,stat)
-                    weight[stat] = getattr(projection,wstat)
-                elif sys.name == 'pecota' :
-                    projs[stat][0] = getattr(projection,stat)
-                elif sys.name == 'zips' :
-                    projs[stat][1] = getattr(projection,stat)
-                elif sys.name == 'steamer' :
-                    projs[stat][2] = getattr(projection,stat)
-        
-        for stat in stats:
-            if min(projs[stat]) > 0:
+player_years = list(set(pt_actuals.keys()) & set(pt_projs.keys()))
+random.shuffle(player_years)
 
-                if year < 2013 and weight > min_weight:
-                    ivars[stat].append(projs[stat])
-                    depvars[stat].append(depvar[stat])
-                    weights[stat].append(weight[stat])
-                elif year == 2013:
-                    projvars[stat].append(projs[stat])
-                    projids[stat].append(player.mlb_id)
+ivars = []
+depvars = []
 
+for pyear in player_years:
+        ivars.append(pt_projs[pyear])
+        depvars.append(pt_actuals[pyear])
+
+x = numpy.array(ivars)
+y = numpy.array(depvars)
+
+model_pt = LassoLarsCV(cv=cv_num)
+model_pt.fit(x,y)
+
+print "Rough PT model, to choose sample"
+print model_pt.coef_
+print model_pt.intercept_
+
+sample_proj_pt_arr = model_pt.predict(x)
+
+sample_proj_pt = dict(zip(player_years,sample_proj_pt_arr))
 
 models = {}
 final_projs = {}
 
+ivars = {}
+depvars = {}
+
 for stat in stats:
+    projs = pm.get_proj_data(proj_years,player_type,stat)
+    actuals = pm.get_actual_data(proj_years,player_type,stat)
 
-    models[stat] = LassoLarsCV(cv=20)
-    combined = zip(ivars[stat], depvars[stat])
-    random.shuffle(combined)
+    player_years = list(set(actuals.keys()) & set(projs.keys()))
 
-    ivars[stat][:], depvars[stat][:] = zip(*combined)
+    fp_years = filter(lambda k: k in sample_proj_pt and sample_proj_pt[k] > min_pt, player_years)
+    
+    random.shuffle(fp_years)
+
+    ivars[stat] = []
+    depvars[stat] = []
+
+    for pyear in fp_years:
+            ivars[stat].append(projs[pyear])
+            depvars[stat].append(actuals[pyear])
 
     x = numpy.array(ivars[stat])
     y = numpy.array(depvars[stat])
-    x2 = numpy.array(projvars[stat])
 
+    models[stat] = LassoLarsCV(cv=cv_num)
     models[stat].fit(x,y)
 
-    print stat
+    print "Model for " + stat
+    print "Num of player-seasons in sample: " + str(len(fp_years))
     print models[stat].coef_
     print models[stat].intercept_
 
-    final_projs[stat] = models[stat].predict(x2)
+ivars2 = {}
+
+for stat in stats:
+    projs = pm.get_proj_data([curr_year],player_type,stat)
+
+    player_years = projs.keys()
+
+    ivars2[stat] = []
+
+    for pyear in player_years:
+            ivars2[stat].append(projs[pyear])
+ 
+    x = numpy.array(ivars2[stat])
+
+    final_stat_proj = models[stat].predict(x)
+
+    final_projs[stat] = dict(zip(player_years,final_stat_proj))
+
+cols = ['mlb_id','last_name','first_name','positions']
+cols.extend(stats)
+
+with open(csvfile, 'wb') as f:
+            writer = csv.DictWriter(f, cols)
+            writer.writeheader()
+
+            for k in player_years:
+                row = {'mlb_id': mlb_ids[k] ,
+                       'first_name': first_names[k],
+                       'last_name': last_names[k],
+                       'positions': positions[k],
+                       }
+                for stat in stats:
+                    row[stat] = final_projs[stat][k]
+                writer.writerow(row)
+                
+    

@@ -63,9 +63,15 @@ class Batter(Player):
         print('%26s : %5s %5s %3s %3s %3s %3s' % \
               ('Projection', 'OBP', 'SLG', 'HR', 'R', 'RBI', 'SB'))
         for proj in self.projections:
-            print('%20s, %4d : %5.3f %5.3f %3d %3d %3d %3d' % \
-                  (proj.projection_system.name, proj.projection_system.year, 
-                   proj.obp, proj.slg, proj.hr, proj.r, proj.rbi, proj.sb))
+            statline = '%20s, %4d :' % \
+                       (proj.projection_system.name, proj.projection_system.year)
+            statline += (' %5.3f' % proj.obp) if proj.obp is not None else ' -----'
+            statline += (' %5.3f' % proj.slg) if proj.slg is not None else ' -----'
+            statline += (' %3d' % proj.hr) if proj.hr is not None else ' ---'
+            statline += (' %3d' % proj.r) if proj.r is not None else ' ---'
+            statline += (' %3d' % proj.rbi) if proj.rbi is not None else ' ---'
+            statline += (' %3d' % proj.sb) if proj.sb is not None else ' ---'
+            print statline
 
 class Pitcher(Player):
 
@@ -86,9 +92,15 @@ class Pitcher(Player):
         print('%26s : %3s %3s %5s %3s %5s %5s' % \
               ('Projection', 'W', 'SV', 'ERA', 'K', 'WHIP', 'IP'))
         for proj in self.projections:
-            print('%20s, %4d : %3d %3d %5.2f %3d %5.3f %5.1f' % \
-                  (proj.projection_system.name, proj.projection_system.year, 
-                   proj.w, proj.sv, proj.era, proj.k, proj.whip, proj.ip))
+            statline = '%20s, %4d :' % \
+                       (proj.projection_system.name, proj.projection_system.year)
+            statline += (' %3d' % proj.w) if proj.w is not None else ' ---'
+            statline += (' %3d' % proj.sv) if proj.sv is not None else ' ---'
+            statline += (' %5.2f' % proj.era) if proj.era is not None else ' -----'
+            statline += (' %3d' % proj.k) if proj.k is not None else ' ---'
+            statline += (' %5.3f' % proj.whip) if proj.whip is not None else ' -----'
+            statline += (' %5.1f' % proj.ip) if proj.ip is not None else ' -----'
+            print statline
 
 class ProjectionSystem(Base):
 

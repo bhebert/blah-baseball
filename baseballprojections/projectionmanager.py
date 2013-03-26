@@ -177,7 +177,7 @@ class ProjectionManager(object):
     def rollback(self):
         return self.session.rollback()
 
-    # csv generation
+    # next two generate an iterator { player: (player, projection) }
 
     def batter_projection_groups(self, filter_clause=None):
 

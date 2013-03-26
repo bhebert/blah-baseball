@@ -123,3 +123,13 @@ def pitcher_post_processor(x,
         except: pass
 
     return x
+
+def pitcher_post_processor_with_ip_fix(x, 
+                                       name_handler=split_firstname_lastname_space,
+                                       strptime_format='%m/%d/%Y'):
+
+    x = pitcher_post_processor(x, name_handler=name_handler, 
+                               strptime_format=strptime_format)
+    if 'ip' in x and x['ip'] is not None:
+        x['ip'] = float(int(x['ip']) + (x['ip'] - int(x['ip']))*10/3.0)
+    return x
