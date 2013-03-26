@@ -233,58 +233,6 @@ class ProjectionManager(object):
 
         return proj_data
 
-
-
-    def get_proj_data(self, years, player_type, stat):
-        proj_data = {}
-        for year in years:
-            if player_type == 'batter':
-                players = self.batter_projection_groups(filter_clause=ProjectionSystem.year==year)
-            else:
-                players = self.pitcher_projection_groups(filter_clause=ProjectionSystem.year==year)
-
-            for player, pairs in players:
-                key = str(player.mlb_id) + "_" + str(year)
-                projs = [-1, -1, -1]
-
-                for (_, projection) in pairs:
-                    sys = projection.projection_system
-
-                    if sys.name == 'pecota' :
-                        projs[0] = getattr(projection,stat)
-                    elif sys.name == 'zips' :
-                        projs[1] = getattr(projection,stat)
-                    elif sys.name == 'steamer' :
-                        projs[2] = getattr(projection,stat)
-
-                if min(projs) > 0:
-                    proj_data[key] = projs
-                    
-        return proj_data
-
-    def get_actual_data(self, years, player_type, stat):
-        act_data = {}
-        for year in years:
-            if player_type == 'batter':
-                players = self.batter_projection_groups(filter_clause=ProjectionSystem.year==year)
-            else:
-                players = self.pitcher_projection_groups(filter_clause=ProjectionSystem.year==year)
-
-            for player, pairs in players:
-                key = str(player.mlb_id) + "_" + str(year)
-                act = -1
-
-                for (_, projection) in pairs:
-                    sys = projection.projection_system
-
-                    if sys.is_actual:
-                        act = getattr(projection,stat)
-
-                if act > 0:
-                    act_data[key] = act
-                    
-        return act_data
-
     def cross_projection_csv(self, csvfile, player_type, stats, 
                              filter_clause=None, verbose=False):
 
