@@ -199,37 +199,42 @@ class ProjectionManager(object):
 
     # Helper functions for the Lasso code
 
-    def get_player_year_data(self, years, systems, player_type, stat, 
-                             stat_function=None):
+    def get_player_year_data(self, years, systems, player_type, stats, 
+                             stat_functions):
 
         proj_data = {}
-        if stat_function is None:
-            stat_function = lambda projection: getattr(projection, stat)
 
-        for year in years:
+        for stat in stats:
+            stat_function = stat_functions[stat]
+            proj_data[stat] = {}
+            
+            if stat_function is None:
+                stat_function = lambda projection: getattr(projection, stat)
 
-            group_filter = and_(ProjectionSystem.year == year,
-                                ProjectionSystem.name.in_(systems))
-            if player_type == 'batter':
-                players = self.batter_projection_groups(group_filter)
-            else:
-                players = self.pitcher_projection_groups(group_filter)
+            for year in years:
 
-            for player, pair in players:
-                #print player, pair
-                key = str(player.mlb_id) + "_" + str(year)
-                projs = { system: None for system in systems }
+                group_filter = and_(ProjectionSystem.year == year,
+                                    ProjectionSystem.name.in_(systems))
+                if player_type == 'batter':
+                    players = self.batter_projection_groups(group_filter)
+                else:
+                    players = self.pitcher_projection_groups(group_filter)
 
-                for (_, projection) in pair:
-                    sys = projection.projection_system
-                    if sys.name in projs:
-                        projs[sys.name] = stat_function(projection)
+                for player, pair in players:
+                    #print player, pair
+                    key = str(player.mlb_id) + "_" + str(year)
+                    projs = { system: None for system in systems }
 
-                if not any(map(lambda x: x is None, projs.values())):
-                    #print "ADDING %s, %s: %s" % (player.last_name, player.first_name, projs)
-                    proj_data[key] = projs
-                #else:
-                    #print "NOT ADDING %s, %s: %s" % (player.last_name, player.first_name, projs)
+                    for (_, projection) in pair:
+                        sys = projection.projection_system
+                        if sys.name in projs:
+                            projs[sys.name] = stat_function(projection)
+
+                    if not any(map(lambda x: x is None, projs.values())):
+                        #print "ADDING %s, %s: %s" % (player.last_name, player.first_name, projs)
+                        proj_data[stat][key] = projs
+                    #else:
+                        #print "NOT ADDING %s, %s: %s" % (player.last_name, player.first_name, projs)
 
         return proj_data
 

@@ -149,6 +149,7 @@ class BatterProjection(Base):
     obp = Column(Float)
     slg = Column(Float)
     positions = Column(String(20))
+    rookie = Column(Integer)
 
     def __repr__(self):
         return '<BatterProjection %d>' % (self.id)
@@ -178,6 +179,10 @@ class PitcherProjection(Base):
     wp = Column(Float)
     hbp = Column(Float)
     whip = Column(Float)
+    g = Column(Float)
+    gs = Column(Float)
+
+    rookie = Column(Integer)
 
     def __repr__(self):
         return '<PitcherProjection %d>' % (self.id)
