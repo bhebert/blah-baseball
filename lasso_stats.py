@@ -1,18 +1,21 @@
 from projections import *
 from sklearn.linear_model import LassoLarsCV
+import itertools
 import numpy
 import numpy.ma
 import random
 import csv
 from baseballprojections.aux_vars import *
 
-base_dir = "C:\\Users\\Benjamin\\Dropbox\\Baseball\\CSVs for DB"
-#base_dir = "/Users/andrew_lim/Dropbox/Baseball/CSVs for DB"
-
+#base_dir = "C:\\Users\\Benjamin\\Dropbox\\Baseball\\CSVs for DB"
+base_dir = "/Users/andrew_lim/Dropbox/Baseball/CSVs for DB"
 
 pm = MyProjectionManager('sqlite:///projections.db')
-#pm = MyProjectionManager()
+
 #pm.read_everything_csv(base_dir = base_dir)
+
+# what coefs get printed to stdout during the run
+print_nonzero_coefs_only = True
 
 player_types = ['batter','pitcher']
 playing_times = {'batter':'pa', 'pitcher':'g'}
@@ -121,21 +124,21 @@ for player_type in player_types:
 
     ivars = []
     depvars = []
+    columns = []
 
     for pyear in player_years:
         ivars.append([pt_projs[pyear][system] for system in proj_systems])
         depvars.append(pt_actuals[pyear]['actual'])
 
     x = numpy.array(ivars)
-    
     y = numpy.array(depvars)
-
     model_pt = LassoLarsCV(cv=cv_num)
     model_pt.fit(x,y)
 
     print "Rough PT model, to choose sample"
-    print model_pt.coef_
-    print model_pt.intercept_
+    for system, coef in zip(proj_systems, model_pt.coef_):
+        print "%40s : %f" % (system, coef)
+    print "%40s : %f" % ('intercept', model_pt.intercept_)
 
     sample_proj_pt_arr = model_pt.predict(x)
 
@@ -175,6 +178,11 @@ for player_type in player_types:
 
         ivars[stat] = []
         depvars[stat] = []
+        coef_cols = []
+
+        for st in proj_stats:
+            for system in psystems:
+                coef_cols.append("%s_%s" % (st, system))
 
         for pyear in fp_years:
             row = []
@@ -191,16 +199,36 @@ for player_type in player_types:
 
         aux = numpy.hstack((yrs,rookies))
         aux2 = add_quad_interactions(aux)
-        x = get_final_regs(x,aux2)        
+        x = get_final_regs(x,aux2)
 
+        aux_cols = ['yrs', 'rookies']
+        aux_cols.extend(["%s * %s" % (c1, c2)
+                         for (c1, c2) in itertools.combinations(aux_cols, 2)])
+
+        cross_cols = []
+        for i in range(len(coef_cols)):
+            for j in range(i, len(coef_cols)):
+                cross_cols.append("%s * %s" % (coef_cols[i], coef_cols[j]))
+            for aux_col in aux_cols:
+                cross_cols.append("%s * %s" % (coef_cols[i], aux_col))
+
+        coef_cols.extend(aux_cols)
+        coef_cols.extend(cross_cols)
 
         models[stat] = LassoLarsCV(cv=cv_num)
         models[stat].fit(x,y)
 
         print "Model for " + stat
         print "Num of player-seasons in sample: " + str(len(fp_years))
-        print models[stat].coef_
-        print models[stat].intercept_
+        if len(coef_cols) != len(models[stat].coef_):
+            print "WARNING COL MISMATCH"
+        else:
+            for coef_col, coef in zip(coef_cols, models[stat].coef_):
+                if not (coef == 0 and print_nonzero_coefs_only):
+                    print "%40s : %f" % (coef_col, coef)
+            print "%40s : %f" % ('intercept', models[stat].intercept_)
+        #print models[stat].coef_
+        #print models[stat].intercept_
 
     ivars2 = {}
 
@@ -228,10 +256,8 @@ for player_type in player_types:
             for st in proj_stats:
                 row.extend(projs[st][pyear][system] for system in psystems)
             ivars2[stat].append(row)
-            
      
         x = numpy.array(ivars2[stat])
-
 
         yrs = get_year_var(player_years,proj_years)
         rookies = get_rookie_var(player_years,[curr_year],'pecota',player_type,pm)
@@ -239,7 +265,6 @@ for player_type in player_types:
         aux = numpy.hstack((yrs,rookies))
         aux2 = add_quad_interactions(aux)
         x = get_final_regs(x,aux2)
-        
         
         final_stat_proj = models[stat].predict(x)
         final_projs[stat] = dict(zip(player_years,final_stat_proj))
