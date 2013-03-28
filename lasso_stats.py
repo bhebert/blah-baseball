@@ -194,14 +194,20 @@ for player_type in player_types:
         x = numpy.array(ivars[stat])
         y = numpy.array(depvars[stat])
 
-        yrs = get_year_var(fp_years,proj_years)
-        rookies = get_rookie_var(fp_years,proj_years,'actual',player_type,pm)
+        # start adding in auxiliaries
 
-        aux = numpy.hstack((yrs,rookies))
+        yrs =     get_year_var(fp_years, proj_years)
+        rookies = get_rookie_var(fp_years, proj_years, 'actual', player_type, pm)
+        ages =    get_age_var(fp_years, proj_years, 'actual', player_type, pm)
+
+        # this line would show fp_years with missing ages
+        # print filter(lambda x: x[1][0] is None, zip(fp_years, ages))
+        
+        aux = numpy.hstack((yrs, rookies, ages))
         aux2 = add_quad_interactions(aux)
         x = get_final_regs(x,aux2)
 
-        aux_cols = ['yrs', 'rookies']
+        aux_cols = ['yrs', 'rookies', 'age']
         aux_cols.extend(["%s * %s" % (c1, c2)
                          for (c1, c2) in itertools.combinations(aux_cols, 2)])
 
@@ -259,10 +265,11 @@ for player_type in player_types:
      
         x = numpy.array(ivars2[stat])
 
-        yrs = get_year_var(player_years,proj_years)
-        rookies = get_rookie_var(player_years,[curr_year],'pecota',player_type,pm)
+        yrs =     get_year_var(player_years, proj_years)
+        rookies = get_rookie_var(player_years, proj_years, 'pecota', player_type, pm)
+        ages =    get_age_var(player_years, proj_years, 'actual', player_type, pm)
 
-        aux = numpy.hstack((yrs,rookies))
+        aux = numpy.hstack((yrs, rookies, ages))
         aux2 = add_quad_interactions(aux)
         x = get_final_regs(x,aux2)
         

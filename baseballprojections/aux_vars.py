@@ -1,3 +1,4 @@
+import datetime
 import numpy
 import projectionmanager
 
@@ -26,8 +27,47 @@ def get_rookie_var(player_years, proj_years, system, player_type,pm):
                                          {'rookie':None})['rookie']
     dummies = []
     for pyear in player_years:
-       dummies.append([rookies[pyear][system]])
+        if pyear in rookies:
+            dummies.append([rookies[pyear][system]])
+        else:
+            dummies.append([0])
     return numpy.array(dummies)
+
+
+# from 1 Apr, arbitrarily
+def stat_age(p, player_type):
+    age_date = datetime.date(p.projection_system.year, 4, 1)
+    if player_type == 'batter':
+        birthdate = p.batter.birthdate
+    else:
+        birthdate = p.pitcher.birthdate
+    if birthdate is not None:
+        age = age_date - birthdate
+        return age.days / 365.25
+    else:
+        return None
+
+
+def get_age_var(player_years, proj_years, system, player_type, pm):
+
+    stat_functions = {
+        'age': lambda p: stat_age(p, player_type)
+    }
+    data = pm.get_player_year_data(proj_years, [system],
+                                   player_type, ['age'],
+                                   stat_functions)['age']
+    ages = []
+    for pyear in player_years:
+        if pyear in data:
+            ages.append([data[pyear][system]])
+        else:
+            # if you have time get the missing ones in there
+            ages.append([0])
+    return numpy.array(ages)
+
+
+
+# aux/interaction helpers
 
 def add_quad_interactions(aux):
     quads = []

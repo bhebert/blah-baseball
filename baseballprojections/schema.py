@@ -77,7 +77,7 @@ class Pitcher(Player):
 
     __tablename__ = 'pitchers'
     id = Column(Integer, ForeignKey('players.id'), primary_key=True)
-    projections = relationship('PitcherProjection', backref='pitchers')
+    projections = relationship('PitcherProjection', backref='pitcher')
 
     __mapper_args__ = {
         'polymorphic_identity': 'pitchers'
