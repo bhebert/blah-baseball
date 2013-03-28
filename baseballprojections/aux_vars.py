@@ -1,3 +1,4 @@
+from baseballprojections import helper
 import datetime
 import numpy
 import projectionmanager
@@ -31,6 +32,23 @@ def get_rookie_var(player_years, proj_years, system, player_type,pm):
             dummies.append([rookies[pyear][system]])
         else:
             dummies.append([0])
+    return numpy.array(dummies)
+
+
+def get_team_vars(player_years, proj_years, system, player_type, pm):
+    
+    data = pm.get_player_year_data(proj_years, [system],
+                                   player_type, ['team'],
+                                   {'team': None })['team']
+    dummies = []
+    # drop the last valid team 'FA' to avoid LD
+    valid_teams = helper.valid_teams[:-1]
+    for pyear in player_years:
+        if pyear in data:
+            dummies.append(map(lambda x: 1 if x == data[pyear][system] else 0, 
+                               valid_teams))
+        else:
+            dummies.append([0] * len(valid_teams))
     return numpy.array(dummies)
 
 

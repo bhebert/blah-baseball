@@ -22,6 +22,96 @@ def split_firstname_lastname_space(full_name):
 def simple_name(name):
     return re.sub(r'\W', '', name).lower()
 
+# to see all the teams:
+# sorted(set(map(lambda x: x.team, pm.query(BatterProjection))))
+
+valid_teams = [
+    u'ARI',
+    u'ATL',
+    u'BAL',
+    u'BOS',
+    u'CHC',
+    u'CHW',
+    u'CIN',
+    u'CLE',
+    u'COL',
+    u'DET',
+    u'HOU',
+    u'KC',
+    u'LAA',
+    u'LAD',
+    u'MIA',
+    u'MIL',
+    u'MIN',
+    u'NYM',
+    u'NYY',
+    u'OAK',
+    u'PHI',
+    u'PIT',
+    u'SD',
+    u'SEA',
+    u'SF',
+    u'STL',
+    u'TB',
+    u'TEX',
+    u'TOR',
+    u'WAS',
+    u'FA',
+]
+
+team_remaps = {
+    'Angels': 'LAA',
+    'Astros': 'HOU',
+    'Athletics': 'OAK',
+    'Blue Jays': 'TOR',
+    'Braves': 'ATL',
+    'Brewers': 'MIL',
+    'Cardinals': 'STL',
+    'Cubs': 'CHC',
+    'Diamondbacks': 'ARI',
+    'Dodgers': 'LAD',
+    'Giants': 'SF',
+    'Indians': 'CLE',
+    'Mariners': 'SEA',
+    'Marlins': 'MIA',
+    'Mets': 'NYM',
+    'Nationals': 'WAS',
+    'Orioles': 'BAL',
+    'Padres': 'SD',
+    'Phillies': 'PHI',
+    'Pirates': 'PIT',
+    'Rangers': 'TEX',
+    'Rays': 'TB',
+    'Red Sox': 'BOS',
+    'Reds': 'CIN',
+    'Rockies': 'COL',
+    'Royals': 'KC',
+    'Tigers': 'DET',
+    'Twins': 'MIN',
+    'White Sox': 'CHW',
+    'Yankees': 'NYY',
+    'none': 'FA',
+    'ANA': 'LAA',
+    'CHA': 'CHW',
+    'CHN': 'CHC',
+    'FLO': 'MIA',
+    'KCA': 'KC',
+    'KCR': 'KC',
+    'LAN': 'LAD',
+    'NYA': 'NYY',
+    'NYN': 'NYM',
+    'SDN': 'SD',
+    'SDP': 'SD',
+    'SFG': 'SF',
+    'SFN': 'SF',
+    'SLN': 'STL',
+    'TBA': 'TB',
+    'TBR': 'TB',
+    'WSN': 'WAS',
+    '': 'FA',
+    '- - -': 'FA',
+}
+
 def basic_post_processor(x, 
                          name_handler=split_firstname_lastname_space,
                          strptime_format='%m/%d/%Y'):
@@ -41,6 +131,12 @@ def basic_post_processor(x,
             x['last_name'] = simple_name(last_name)
         if 'first_name' not in x or ('first_name' is None and 'first_name' != ''):
             x['first_name'] = simple_name(first_name)
+
+    if 'team' in x and x['team'] is not None and x['team'] != '':
+        if x['team'] in team_remaps:
+            x['team'] = team_remaps[x['team']]
+    else:
+        x['team'] = 'FA'
 
     return x
 

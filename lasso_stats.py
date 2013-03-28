@@ -6,6 +6,7 @@ import numpy.ma
 import random
 import csv
 from baseballprojections.aux_vars import *
+from baseballprojections import helper
 
 #base_dir = "C:\\Users\\Benjamin\\Dropbox\\Baseball\\CSVs for DB"
 base_dir = "/Users/andrew_lim/Dropbox/Baseball/CSVs for DB"
@@ -196,18 +197,29 @@ for player_type in player_types:
 
         # start adding in auxiliaries
 
-        yrs =     get_year_var(fp_years, proj_years)
+        yrs     = get_year_var(fp_years, proj_years)
         rookies = get_rookie_var(fp_years, proj_years, 'actual', player_type, pm)
-        ages =    get_age_var(fp_years, proj_years, 'actual', player_type, pm)
+        ages    = get_age_var(fp_years, proj_years, 'actual', player_type, pm)
+        teams   = get_team_vars(fp_years, proj_years, 'actual', player_type, pm)
+
+        #print 'YRS'
+        #print yrs
+        #print 'ROOKIES'
+        #print rookies
+        #print 'AGES'
+        #print ages
+        print teams.shape
+        print teams
 
         # this line would show fp_years with missing ages
         # print filter(lambda x: x[1][0] is None, zip(fp_years, ages))
         
-        aux = numpy.hstack((yrs, rookies, ages))
+        aux = numpy.hstack((yrs, rookies, ages, teams))
         aux2 = add_quad_interactions(aux)
         x = get_final_regs(x,aux2)
 
         aux_cols = ['yrs', 'rookies', 'age']
+        aux_cols.extend(map(lambda team: 'team_%s' % team, helper.valid_teams[:-1]))
         aux_cols.extend(["%s * %s" % (c1, c2)
                          for (c1, c2) in itertools.combinations(aux_cols, 2)])
 
@@ -265,11 +277,19 @@ for player_type in player_types:
      
         x = numpy.array(ivars2[stat])
 
-        yrs =     get_year_var(player_years, proj_years)
-        rookies = get_rookie_var(player_years, proj_years, 'pecota', player_type, pm)
-        ages =    get_age_var(player_years, proj_years, 'actual', player_type, pm)
+        yrs     = get_year_var(player_years, proj_years)
+        rookies = get_rookie_var(player_years, [curr_year], 'pecota', player_type, pm)
+        ages    = get_age_var(player_years, [curr_year], 'pecota', player_type, pm)
+        teams   = get_team_vars(fp_years, [curr_year], 'pecota', player_type, pm)
 
-        aux = numpy.hstack((yrs, rookies, ages))
+        #print 'YRS'
+        #print yrs
+        #print 'ROOKIES'
+        #print rookies
+        #print 'AGES'
+        #print ages
+
+        aux = numpy.hstack((yrs, rookies, ages, teams))
         aux2 = add_quad_interactions(aux)
         x = get_final_regs(x,aux2)
         
