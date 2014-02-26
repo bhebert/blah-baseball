@@ -3,13 +3,27 @@ from baseballprojections import projectionmanager as pm
 from baseballprojections.schema import *
 import os.path
 
+
+
+
 class MyProjectionManager(pm.ProjectionManager):
+
+
+    def read_actuals(self, base_dir, verbose=False):
+
+        self.read_projection_csv('/Users/andrew_lim/blah-baseball/data/FanGraphs Actual Batting 2004-2013.csv', 
+                                 'actual', 
+                                 [2004], 
+                                 is_actual=True, 
+                                 player_type='batter', 
+                                 header_row=['year', 'mlb_id', 'team', 'age'], 
+                                 post_processor=helper.batter_post_processor, 
+                                 verbose=True)
+
 
     # Hardcoded function to read everything
 
     def read_everything_csv(self, base_dir, verbose=False):
-
-        
 
         print('Reading PECOTA 2011...')
         self.read_pecota_batters_2011(os.path.join(base_dir, 'Pecota Hitters 2011.csv'), verbose=verbose)
@@ -60,6 +74,8 @@ class MyProjectionManager(pm.ProjectionManager):
         self.read_actuals_pitchers_2013(os.path.join(base_dir, 'Actuals Pitchers 2013.csv'), verbose=verbose)
 
     # Actuals readers
+
+
     
     def read_actuals_batters_2011(self, filename, verbose=False):
 

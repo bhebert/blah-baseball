@@ -111,7 +111,8 @@ class ProjectionManager(object):
         self.session.commit()
         return projection
 
-    def read_projection_csv(self, filename, projection_name, year, is_actual,
+
+    def read_projection_csv(self, filename, projection_name, years, is_actual,
                             player_type, header_row, post_processor=None, 
                             skip_rows=1, verbose=False):
 
@@ -119,17 +120,24 @@ class ProjectionManager(object):
             raise Exception('player_type is %s, must be either '\
                             '"batter" or "pitcher"' % player_type)
 
-        projection_system = self.add_or_update_projection_system('%s' % projection_name, 
-                                                                 year, 
-                                                                 is_actual)
+        # Add projection system for each year in years
+
+        if not isinstance(years, list):
+            years = [years]
+
+        systems = {}
+        for year in years:
+            systems[int(year)] = self.add_or_update_projection_system('%s' % projection_name, 
+                                                                      year, is_actual)
+
         reader = csv.reader(open(filename, 'r'))
         for i in range(skip_rows):
             next(reader)
         n = len(header_row)
 
-        add_batter_args = getSQLAlchemyFields(Batter)
+        add_batter_args  = getSQLAlchemyFields(Batter)
         add_pitcher_args = getSQLAlchemyFields(Pitcher)
-        add_batter_projection_args = getSQLAlchemyFields(BatterProjection)
+        add_batter_projection_args  = getSQLAlchemyFields(BatterProjection)
         add_pitcher_projection_args = getSQLAlchemyFields(PitcherProjection)
 
         for row in reader:
@@ -137,6 +145,20 @@ class ProjectionManager(object):
             data = dict(zip(header_row, row[:n]))
             if post_processor is not None:
                 data = post_processor(data)
+
+            if 'year' in data:
+                year = int(data['year'])
+            elif len(systems) == 1:
+                year = int(list(systems.keys())[0])
+            else:
+                raise Exception('Multiple years supplied, but no year column '\
+                                'found in data')
+
+            try:
+                system = systems[year]
+            except KeyError:
+                print('Unable to find projection system for year %d, skipping' % year)
+                continue
 
             if player_type == 'batter':
                 player_data = { x: data[x] for x in add_batter_args if x in data }
@@ -146,8 +168,10 @@ class ProjectionManager(object):
                     projection_data = { x: data[x] for x in add_batter_projection_args
                                         if x in data }
                     projection_data['batter_id'] = player.id
-                    projection_data['projection_system_id'] = projection_system.id
+                    projection_data['projection_system_id'] = system.id
                     projection = self.add_batter_projection(**projection_data)
+                    if verbose:
+                        print('%s, %s (%d)' % (player, projection, year))
                 except Exception as e:
                     if verbose:
                         print(e)
@@ -160,14 +184,13 @@ class ProjectionManager(object):
                     projection_data = { x: data[x] for x in add_pitcher_projection_args
                                         if x in data }
                     projection_data['pitcher_id'] = player.id
-                    projection_data['projection_system_id'] = projection_system.id
+                    projection_data['projection_system_id'] = system.id
                     projection = self.add_pitcher_projection(**projection_data)
+                    if verbose:
+                        print('%s, %s (%d)' % (player, projection, year))
                 except Exception as e:
                     if verbose:
                         print(e)
-
-            if verbose:
-                print('%s, %s' % (player, projection))
 
     # shortcuts
 
