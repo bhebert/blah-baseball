@@ -59,7 +59,7 @@ class Batter(Player):
 
     def prettyprint(self):
         super(Batter, self).prettyprint()
-        print
+        print()
         print('%26s : %5s %5s %3s %3s %3s %3s' % \
               ('Projection', 'OBP', 'SLG', 'HR', 'R', 'RBI', 'SB'))
         for proj in self.projections:
@@ -71,7 +71,7 @@ class Batter(Player):
             statline += (' %3d' % proj.r) if proj.r is not None else ' ---'
             statline += (' %3d' % proj.rbi) if proj.rbi is not None else ' ---'
             statline += (' %3d' % proj.sb) if proj.sb is not None else ' ---'
-            print statline
+            print(statline)
 
 class Pitcher(Player):
 
@@ -88,7 +88,7 @@ class Pitcher(Player):
 
     def prettyprint(self):
         super(Pitcher, self).prettyprint()
-        print
+        print()
         print('%26s : %3s %3s %5s %3s %5s %5s' % \
               ('Projection', 'W', 'SV', 'ERA', 'K', 'WHIP', 'IP'))
         for proj in self.projections:
@@ -100,7 +100,7 @@ class Pitcher(Player):
             statline += (' %3d' % proj.k) if proj.k is not None else ' ---'
             statline += (' %5.3f' % proj.whip) if proj.whip is not None else ' -----'
             statline += (' %5.1f' % proj.ip) if proj.ip is not None else ' -----'
-            print statline
+            print(statline)
 
 class ProjectionSystem(Base):
 
@@ -127,7 +127,7 @@ class BatterProjection(Base):
     projection_system_id = Column(Integer, ForeignKey('projection_systems.id'))
     UniqueConstraint('batter_id', 'projection_id')
 
-    team = Column(String(32))
+    team = Column(String(3))
 
     pa = Column(Float)
     ab = Column(Float)
@@ -162,7 +162,7 @@ class PitcherProjection(Base):
     projection_system_id = Column(Integer, ForeignKey('projection_systems.id'))
     UniqueConstraint('pitcher_id', 'projection_id')
 
-    team = Column(String(32))
+    team = Column(String(3))
 
     w = Column(Float)
     l = Column(Float)

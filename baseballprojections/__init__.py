@@ -1,3 +1,3 @@
-import helper
-import projectionmanager
-import schema
+import baseballprojections.helper
+import baseballprojections.projectionmanager
+import baseballprojections.schema

@@ -1,5 +1,5 @@
-from helper import getSQLAlchemyFields
-from schema import *
+from baseballprojections.helper import getSQLAlchemyFields
+from baseballprojections.schema import *
 from sqlalchemy import create_engine, or_, and_
 from sqlalchemy.orm import sessionmaker
 import csv
@@ -64,7 +64,7 @@ class ProjectionManager(object):
             raise Exception('Error: multiple matches found: %s' % matches)
         elif len(matches) == 1:
             match = matches[0]
-            for field, value in kwargs.iteritems():
+            for field, value in kwargs.items():
                 if overwrite or getattr(match, field) is None or getattr(match, field) == '':
                     setattr(match, field, value)
         else:
@@ -124,7 +124,7 @@ class ProjectionManager(object):
                                                                  is_actual)
         reader = csv.reader(open(filename, 'r'))
         for i in range(skip_rows):
-            reader.next()
+            next(reader)
         n = len(header_row)
 
         add_batter_args = getSQLAlchemyFields(Batter)
@@ -150,7 +150,7 @@ class ProjectionManager(object):
                     projection = self.add_batter_projection(**projection_data)
                 except Exception as e:
                     if verbose:
-                        print e
+                        print(e)
 
             else:
                 player_data = { x: data[x] for x in add_pitcher_args if x in data }
@@ -164,7 +164,7 @@ class ProjectionManager(object):
                     projection = self.add_pitcher_projection(**projection_data)
                 except Exception as e:
                     if verbose:
-                        print e
+                        print(e)
 
             if verbose:
                 print('%s, %s' % (player, projection))
@@ -207,6 +207,8 @@ class ProjectionManager(object):
         for stat in stats:
             stat_function = stat_functions[stat]
             proj_data[stat] = {}
+
+            systems2 = list(filter(lambda s: not ((stat in ['sv','saverate']) and s=='zips'),systems))
             
             if stat_function is None:
                 stat_function = lambda projection: getattr(projection, stat)
@@ -214,7 +216,7 @@ class ProjectionManager(object):
             for year in years:
 
                 group_filter = and_(ProjectionSystem.year == year,
-                                    ProjectionSystem.name.in_(systems))
+                                    ProjectionSystem.name.in_(systems2))
                 if player_type == 'batter':
                     players = self.batter_projection_groups(group_filter)
                 else:
@@ -223,7 +225,7 @@ class ProjectionManager(object):
                 for player, pair in players:
                     #print player, pair
                     key = str(player.mlb_id) + "_" + str(year)
-                    projs = { system: None for system in systems }
+                    projs = { system: None for system in systems2 }
 
                     for (_, projection) in pair:
                         sys = projection.projection_system
@@ -266,7 +268,7 @@ class ProjectionManager(object):
             writer = csv.DictWriter(f, cols)
             writer.writeheader()
             for player, pairs in players:
-                if verbose: print player
+                if verbose: print(player)
                 row = { 'last_name': player.last_name,
                         'first_name': player.first_name,
                         'mlb_id': player.mlb_id }

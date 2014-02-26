@@ -9,6 +9,8 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_everything_csv(self, base_dir, verbose=False):
 
+        
+
         print('Reading PECOTA 2011...')
         self.read_pecota_batters_2011(os.path.join(base_dir, 'Pecota Hitters 2011.csv'), verbose=verbose)
         self.read_pecota_pitchers_2011(os.path.join(base_dir, 'Pecota Pitchers 2011.csv'), verbose=verbose)
@@ -52,6 +54,10 @@ class MyProjectionManager(pm.ProjectionManager):
         print('Reading Actuals 2012...')
         self.read_actuals_batters_2012(os.path.join(base_dir, 'Actuals Hitters 2012.csv'), verbose=verbose)
         self.read_actuals_pitchers_2012(os.path.join(base_dir, 'Actuals Pitchers 2012.csv'), verbose=verbose)
+
+        print('Reading Actuals 2013...')
+        self.read_actuals_batters_2013(os.path.join(base_dir, 'Actuals Hitters 2013.csv'), verbose=verbose)
+        self.read_actuals_pitchers_2013(os.path.join(base_dir, 'Actuals Pitchers 2013.csv'), verbose=verbose)
 
     # Actuals readers
     
@@ -97,6 +103,28 @@ class MyProjectionManager(pm.ProjectionManager):
                                  player_type='pitcher',
                                  header_row=header_row, 
                                  post_processor=actual_pitcher_post_processor,
+                                 verbose=verbose)
+        
+    def read_actuals_pitchers_2013(self, filename, verbose=False):
+
+        header_row = ['mlb_id', 'full_name', 'team', 'w', 'sv', 'g', 'gs', 'ip', 
+                      'era', 'k9', 'h', 'bb', '', 'hbp', '']
+        self.read_projection_csv(filename, 'actual', 2013,
+                                 is_actual=True,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=actual_pitcher_post_processor,
+                                 verbose=verbose)
+
+    def read_actuals_batters_2013(self, filename, verbose=False):
+
+        header_row = ['mlb_id', 'full_name', 'team', '', 'pa', 'ab', 
+                      'obp', 'slg', 'r', 'rbi', 'sb', 'cs', '']
+        self.read_projection_csv(filename, 'actual', 2013,
+                                 is_actual=True,
+                                 player_type='batter',
+                                 header_row=header_row, 
+                                 post_processor=helper.batter_post_processor,
                                  verbose=verbose)
 
     # PECOTA readers
@@ -314,7 +342,7 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_steamer_batters_2013(self, filename, verbose=False):
 
-        header_row = ['steamer_id', 'mlb_id', 'first_name', 'last_name', 'positions', 
+        header_row = ['mlb_id', 'first_name', 'last_name', 'positions', 
                       '', '', 'team', 'pa', '', '', 'bb', 'k', 'hbp', '', 
                       'sac', 'sf', 'ab', 'h', 'h1b', 'h2b', 'h3b', 'hr', 'avg',
                       'obp', 'slg', '', 'sb', 'cs', 'r', 'rbi']
@@ -327,10 +355,10 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_steamer_pitchers_2013(self, filename, verbose=False):
 
-        header_row = ['steamer_id', 'mlb_id', 'first_name', 'last_name', 'ip',
+        header_row = ['mlb_id', 'full_name','first_name', 'last_name', 'ip',
                       'g', 'gs', '', 'sv', '', '', '', '', '', '', '', '', '', '',
                       '', '', '', '', '', '', '', 'era', 'ra', 'k', 'bb', 
-                      'hbp', '', '', '', 'h', 'er', 'r', 'whip', 'w', 'l']
+                      'hbp', '', '', 'hr9', 'h', 'er', 'r', 'whip', 'w', 'l']
         self.read_projection_csv(filename, 'steamer', 2013, 
                                  is_actual=False,
                                  player_type='pitcher',
@@ -369,6 +397,7 @@ def steamer2013_post_processor(x):
     Post-processor specially for Steamer 2013, which weirdly includes only an
     HR/9 field but not an HR field
     '''
+
     try: x['hr'] = float(x['hr9']) / 9.0 * float(x['ip'])
     except: pass
     return helper.pitcher_post_processor(x)

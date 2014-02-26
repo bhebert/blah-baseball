@@ -5,8 +5,8 @@ Python program to load baseball projections into a database. (Not written for th
 
 Requirements (suggested version number in parentheses, though older versions may work): 
 
-- Python 2 (2.7.3)
-- SQLAlchemy (0.8.0b2)
+- Python 3 (3.3.4)
+- SQLAlchemy (0.9.3)
 
 For databases I used SQLite3 (3.7.14.1) but you should be OK with anything that SQLAlchemy supports. 
 

@@ -3,9 +3,9 @@ import re
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 def getSQLAlchemyFields(classname):
-    attribs = classname.__dict__.iteritems()
-    attribs = filter(lambda (k,v): type(v) is InstrumentedAttribute, attribs)
-    return map(lambda (x,_): x, attribs)
+    attribs = classname.__dict__.items()
+    attribs = filter(lambda v: type(v[1]) is InstrumentedAttribute, attribs)
+    return list(map(lambda x: x[0], attribs))
 
 def split_lastname_firstname_comma(full_name):
     splitname = full_name.split(',')

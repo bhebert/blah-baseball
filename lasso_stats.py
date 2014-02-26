@@ -1,32 +1,63 @@
 from projections import *
-from sklearn.linear_model import LassoLarsCV
+from sklearn.linear_model import LassoLarsCV, LassoCV
 import itertools
 import numpy
 import numpy.ma
 import random
 import csv
 from baseballprojections.aux_vars import *
-from baseballprojections import helper
+
+# There are some warnings from scikit-learn
+# This causes them to be ignored
+import warnings
+warnings.filterwarnings("ignore",category=DeprecationWarning)
 
 #base_dir = "C:\\Users\\Benjamin\\Dropbox\\Baseball\\CSVs for DB"
-base_dir = "/Users/andrew_lim/Dropbox/Baseball/CSVs for DB"
+#base_dir = "/Users/andrew_lim/Dropbox/Baseball/CSVs for DB"
+
+base_dir = "/Users/bhebert/Dropbox/Baseball/CSVs for DB"
+
+
 
 pm = MyProjectionManager('sqlite:///projections.db')
 
-#pm.read_everything_csv(base_dir = base_dir)
+#pm.read_everything_csv(base_dir = base_dir,verbose=False)
 
 # what coefs get printed to stdout during the run
 print_nonzero_coefs_only = True
 
 player_types = ['batter','pitcher']
+#player_types = ['pitcher']
+#player_types = ['batter']
 playing_times = {'batter':'pa', 'pitcher':'g'}
 stats = {'batter':['pa', 'ab', 'obp', 'slg', 'sbrate', 'csrate', 'runrate', 'rbirate'],
          'pitcher':['g','gs','ip','era','whip','sv','winrate','krate']}
+#stats = {'batter':['pa','sbrate'],'pitcher':['ip','era']}
+        # 'pitcher':['g','era','krate']}
 proj_systems = ['pecota', 'zips', 'steamer']
 proj_systems_sv = ['pecota','steamer']
 
-cv_num = 10
-min_pts ={'batter':300, 'pitcher':15}
+old_model = False
+
+if old_model:
+
+    cv_num = 10
+    # This controls the weights of the "unusual" variables
+    weight = 0.0001
+    min_pts ={'batter':150, 'pitcher':15}
+
+    # This is a dummy added in 2014 to control whether yrs get weight
+    # This seems to produce terrible results. Not sure why.
+    no_yr_weight = False
+    use_lars = True
+else:
+    cv_num = 10;
+    weight = 1;
+    min_pts ={'batter':150, 'pitcher':15}
+    no_yr_weight = False
+    use_lars = False
+    
+    
 
 proj_years = [2011, 2012]
 curr_year = 2013
@@ -50,11 +81,15 @@ def stat_rbirate(p):
 def stat_sbrate(p):
     if p.pa is not None and p.sb is not None and p.pa > 0 and p.obp is not None and p.obp > 0:
         return p.sb / (p.pa*p.obp)
+    elif p.pa is not None and p.sb is not None and p.pa > 0 and p.obp is not None and p.obp == 0:
+        return 0
     else:
         return None
 def stat_csrate(p):
     if p.pa is not None and p.cs is not None and p.pa > 0 and p.obp is not None and p.obp > 0:
         return p.cs / (p.pa*p.obp)
+    elif p.pa is not None and p.cs is not None and p.pa > 0 and p.obp is not None and p.obp == 0:
+        return 0
     else:
         return None
 def stat_saverate(p):
@@ -82,6 +117,8 @@ stat_functions['csrate'] = stat_csrate
 stat_functions['saverate'] = stat_saverate
 stat_functions['winrate'] = stat_winrate
 stat_functions['krate'] = stat_krate
+
+variances = {}
 
 for player_type in player_types:
     csvfile = player_type + "Projs.csv"
@@ -116,6 +153,11 @@ for player_type in player_types:
     pt_projs = pm.get_player_year_data(proj_years, proj_systems,
                                        player_type, [playing_time],
                                        stat_functions)[playing_time]
+
+    pt_projs_curr = pm.get_player_year_data([curr_year], proj_systems,
+                                       player_type, [playing_time],
+                                       stat_functions)[playing_time]
+    
     pt_actuals = pm.get_player_year_data(proj_years, ['actual'],
                                          player_type, [playing_time],
                                          stat_functions)[playing_time]
@@ -124,6 +166,7 @@ for player_type in player_types:
     random.shuffle(player_years)
 
     ivars = []
+    ivars2 = []
     depvars = []
     columns = []
 
@@ -131,19 +174,26 @@ for player_type in player_types:
         ivars.append([pt_projs[pyear][system] for system in proj_systems])
         depvars.append(pt_actuals[pyear]['actual'])
 
+    for pyear in pt_projs_curr.keys():
+        ivars2.append([pt_projs_curr[pyear][system] for system in proj_systems])
+
     x = numpy.array(ivars)
+    x2 = numpy.array(ivars2)
     y = numpy.array(depvars)
     model_pt = LassoLarsCV(cv=cv_num)
     model_pt.fit(x,y)
 
-    print "Rough PT model, to choose sample"
+    print("Rough PT model, to choose sample")
     for system, coef in zip(proj_systems, model_pt.coef_):
-        print "%40s : %f" % (system, coef)
-    print "%40s : %f" % ('intercept', model_pt.intercept_)
+        print("%40s : %f" % (system, coef))
+    print("%40s : %f" % ('intercept', model_pt.intercept_))
 
     sample_proj_pt_arr = model_pt.predict(x)
 
+    curr_proj_pt_arr = model_pt.predict(x2)
+
     sample_proj_pt = dict(zip(player_years,sample_proj_pt_arr))
+    curr_proj_pt = dict(zip(pt_projs_curr.keys(),curr_proj_pt_arr))
 
     models = {}
     final_projs = {}
@@ -153,16 +203,14 @@ for player_type in player_types:
 
     for stat in stats[player_type]:
 
-        proj_stats = [stat]
-        
-        if stat in ['sv','g','gs']:
-            psystems = proj_systems_sv
-            proj_stats = ['sv','g','gs','krate','era']
+        if old_model:
+            proj_stats = stats[player_type]
         else:
-            psystems = proj_systems
+            proj_stats = [stat]
+            if stat in  ['sv','saverate']:
+                proj_stats = [stat,'g','gs','era']
             
-            
-        projs = pm.get_player_year_data(proj_years, psystems,
+        projs = pm.get_player_year_data(proj_years, proj_systems,
                                         player_type, proj_stats,
                                         stat_functions)
             
@@ -174,7 +222,7 @@ for player_type in player_types:
         for st in proj_stats:
             pset = pset & set(projs[st].keys())
         player_years = list(pset)
-        fp_years = filter(lambda k: k in sample_proj_pt and sample_proj_pt[k] > min_pts[player_type], player_years)
+        fp_years = list(filter(lambda k: k in sample_proj_pt and sample_proj_pt[k] > min_pts[player_type], player_years))
         random.shuffle(fp_years)
 
         ivars[stat] = []
@@ -182,47 +230,68 @@ for player_type in player_types:
         coef_cols = []
 
         for st in proj_stats:
-            for system in psystems:
+            systems2 = list(filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems))
+            for system in systems2:
                 coef_cols.append("%s_%s" % (st, system))
 
         for pyear in fp_years:
             row = []
             for st in proj_stats:
-                row.extend(projs[st][pyear][system] for system in psystems)
+                systems2 = list(filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems))
+                row.extend(projs[st][pyear][system] for system in systems2)
             ivars[stat].append(row)
             depvars[stat].append(actuals[pyear]['actual'])
 
         x = numpy.array(ivars[stat])
         y = numpy.array(depvars[stat])
 
+        variances[stat] = numpy.std(y)
+        w = weight * variances[stat]
+
+        #print x
+        
+        # Normalize the other stats used
+        j = 0
+        for st in proj_stats:
+            systems2 = filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems)
+            for system in systems2:
+                if st != stat:
+                    x[:,j] = standardize(x[:,j],w)
+                j = j + 1
+        #y = standardize(y,1)
+
+        #print x
+                
         # start adding in auxiliaries
-
-        yrs     = get_year_var(fp_years, proj_years)
+        yrs =     get_year_var(fp_years, proj_years)
+        if no_yr_weight:
+             yrs =  yrs / weight           
+        
         rookies = get_rookie_var(fp_years, proj_years, 'actual', player_type, pm)
-        ages    = get_age_var(fp_years, proj_years, 'actual', player_type, pm)
-        teams   = get_team_vars(fp_years, proj_years, 'actual', player_type, pm)
+        ages =    get_age_var(fp_years, proj_years, 'actual', player_type, pm,w)
 
-        #print 'YRS'
-        #print yrs
-        #print 'ROOKIES'
-        #print rookies
-        #print 'AGES'
-        #print ages
-        print teams.shape
-        print teams
+        aux = numpy.hstack((yrs, rookies, ages))
+        aux2 = add_quad_interactions(aux)
+        
+
+        teams   = get_team_vars(fp_years, proj_years, 'actual', player_type, pm)
 
         # this line would show fp_years with missing ages
         # print filter(lambda x: x[1][0] is None, zip(fp_years, ages))
+        aux3 = numpy.hstack((aux2,teams))
+
+        if old_model:
+            x = get_final_regs(x,aux3,weight)
+            aux_cols = ['yrs', 'rookies', 'age']
+            aux_cols.extend(["%s * %s" % (c1, c2)
+                    for (c1, c2) in itertools.combinations(aux_cols, 2)])
+            aux_cols.extend(list(map(lambda team: 'team_%s' % team, helper.valid_teams[2:])))
+        else:
+            x = get_final_regs(x,yrs,weight)
+            aux_cols = ['yrs']
+
+ 
         
-        aux = numpy.hstack((yrs, rookies, ages, teams))
-        aux2 = add_quad_interactions(aux)
-        x = get_final_regs(x,aux2)
-
-        aux_cols = ['yrs', 'rookies', 'age']
-        aux_cols.extend(map(lambda team: 'team_%s' % team, helper.valid_teams[:-1]))
-        aux_cols.extend(["%s * %s" % (c1, c2)
-                         for (c1, c2) in itertools.combinations(aux_cols, 2)])
-
         cross_cols = []
         for i in range(len(coef_cols)):
             for j in range(i, len(coef_cols)):
@@ -233,73 +302,138 @@ for player_type in player_types:
         coef_cols.extend(aux_cols)
         coef_cols.extend(cross_cols)
 
-        models[stat] = LassoLarsCV(cv=cv_num)
+        if use_lars:
+            models[stat] = LassoLarsCV(cv=cv_num, normalize=False)
+        else:
+            models[stat] = LassoCV(cv=cv_num, normalize=True)
         models[stat].fit(x,y)
 
-        print "Model for " + stat
-        print "Num of player-seasons in sample: " + str(len(fp_years))
+        print("Model for " + stat)
+        print("Num of player-seasons in sample: " + str(len(fp_years)))
         if len(coef_cols) != len(models[stat].coef_):
-            print "WARNING COL MISMATCH"
+            print("WARNING COL MISMATCH")
         else:
             for coef_col, coef in zip(coef_cols, models[stat].coef_):
                 if not (coef == 0 and print_nonzero_coefs_only):
-                    print "%40s : %f" % (coef_col, coef)
-            print "%40s : %f" % ('intercept', models[stat].intercept_)
+                    print("%40s : %f" % (coef_col, coef))
+            print("%40s : %f" % ('intercept', models[stat].intercept_))
         #print models[stat].coef_
         #print models[stat].intercept_
 
     ivars2 = {}
+    depvars2 = {}
+    ptvars = {}
 
     for stat in stats[player_type]:
-        proj_stats = [stat]
-        if stat in ['sv','g','gs']:
-            psystems = proj_systems_sv
-            proj_stats = ['sv','g','gs','krate','era']
+        if old_model:
+            proj_stats = stats[player_type]
         else:
-            psystems = proj_systems
-
+            proj_stats = [stat]
+            if stat in  ['sv','saverate']:
+                proj_stats = [stat,'g','gs','era']
+        
       
-        projs = pm.get_player_year_data([curr_year], psystems, 
+        projs = pm.get_player_year_data([curr_year], proj_systems, 
                                         player_type, proj_stats, 
                                         stat_functions)
 
-        pset = set(projs[stat].keys())
+        actuals = pm.get_player_year_data([curr_year], ['actual'], 
+                                        player_type, [stat], 
+                                        stat_functions)
+
+        ptstat = playing_times[player_type]
+
+        actualspt = pm.get_player_year_data([curr_year], ['actual'], 
+                                        player_type, [ptstat], 
+                                        stat_functions)[ptstat]
+
+        pset = set(actuals[stat].keys())
+        pset = pset & set(actualspt.keys())
         for st in proj_stats:
             pset = pset & set(projs[st].keys())
-        player_years = list(pset)
+        player_years2 = list(pset)
+
+        player_years = list(filter(lambda k: k in curr_proj_pt and curr_proj_pt[k] > min_pts[player_type], player_years2))
+#        player_years = player_years2
 
         ivars2[stat] = []
+        depvars2[stat] = []
+        ptvars[stat] = []
         for pyear in player_years:
             row = []
             for st in proj_stats:
-                row.extend(projs[st][pyear][system] for system in psystems)
+                systems2 = list(filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems))
+                row.extend(projs[st][pyear][system] for system in systems2)
             ivars2[stat].append(row)
+            depvars2[stat].append(actuals[stat][pyear]['actual'])
+            ptvars[stat].append(actualspt[pyear]['actual'])
      
         x = numpy.array(ivars2[stat])
+        y = numpy.array(depvars2[stat])
+        pt = numpy.array(ptvars[stat])
 
-        yrs     = get_year_var(player_years, proj_years)
-        rookies = get_rookie_var(player_years, [curr_year], 'pecota', player_type, pm)
-        ages    = get_age_var(player_years, [curr_year], 'pecota', player_type, pm)
-        teams   = get_team_vars(fp_years, [curr_year], 'pecota', player_type, pm)
+        w = weight * variances[stat]
 
-        #print 'YRS'
-        #print yrs
-        #print 'ROOKIES'
-        #print rookies
-        #print 'AGES'
-        #print ages
-
-        aux = numpy.hstack((yrs, rookies, ages, teams))
-        aux2 = add_quad_interactions(aux)
-        x = get_final_regs(x,aux2)
+        #print x
         
-        final_stat_proj = models[stat].predict(x)
+        # Normalize the other stats used
+        j = 0
+        for st in proj_stats:
+            systems2 = list(filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems))
+            if st == stat:
+                xproj = x[:,j:j+len(systems2)]
+            for system in systems2:
+                if st != stat:
+                    x[:,j] = standardize(x[:,j],w)
+                j = j + 1
+
+        y
+        #print x
+
+        yrs =     get_year_var(player_years, proj_years)
+        if no_yr_weight:
+             yrs =  yrs / weight
+             
+        rookies = get_rookie_var(player_years, [curr_year], 'pecota', player_type, pm)
+        ages =    get_age_var(player_years, [curr_year], 'pecota', player_type, pm, weight)
+
+        aux = numpy.hstack((yrs, rookies, ages))
+        aux2 = add_quad_interactions(aux)
+
+        teams   = get_team_vars(player_years, [curr_year], 'pecota', player_type, pm)
+        aux3 = numpy.hstack((aux2,teams))
+
+        if old_model:
+            x2 = get_final_regs(x,aux3,weight)
+        else:
+            x2 = get_final_regs(x,yrs,weight)
+        
+        final_stat_proj = models[stat].predict(x2)
         final_projs[stat] = dict(zip(player_years,final_stat_proj))
+
+
+        systems = list(filter(lambda s: not ((stat in ['sv','saverate']) and s=='zips'),proj_systems))
+
+        # Don't weight errors for playing-time variables
+        if st in ['pa','ab','g','gs','ip','sv']:
+            pt = numpy.ones(y.shape)
+
+        print()
+        print("Final %s RMSE: %f" % (stat,getRMSE(final_stat_proj,y,pt)))
+
+        j = 0
+        for sys in systems:
+            print("%s  %s RMSE: %f" % (sys, stat, getRMSE(xproj[:,j],y,pt)))
+            j = j+1
+            
+        
+
+        
 
     cols = ['mlb_id','last_name','first_name','positions']
     cols.extend(stats[player_type])
 
-    with open(csvfile, 'wb') as f:
+    with open(csvfile, 'w') as f:
 
         writer = csv.DictWriter(f, cols)
         writer.writeheader()
