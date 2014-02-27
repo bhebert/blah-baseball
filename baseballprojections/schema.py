@@ -62,7 +62,8 @@ class Batter(Player):
         print()
         print('%26s : %5s %5s %3s %3s %3s %3s' % \
               ('Projection', 'OBP', 'SLG', 'HR', 'R', 'RBI', 'SB'))
-        for proj in self.projections:
+        projections = sorted(self.projections, key=lambda x: (x.projection_system.name, x.projection_system.year))
+        for proj in projections:
             statline = '%20s, %4d :' % \
                        (proj.projection_system.name, proj.projection_system.year)
             statline += (' %5.3f' % proj.obp) if proj.obp is not None else ' -----'
@@ -91,7 +92,8 @@ class Pitcher(Player):
         print()
         print('%26s : %3s %3s %5s %3s %5s %5s' % \
               ('Projection', 'W', 'SV', 'ERA', 'K', 'WHIP', 'IP'))
-        for proj in self.projections:
+        projections = sorted(self.projections, key=lambda x: (x.projection_system.name, x.projection_system.year))
+        for proj in projections:
             statline = '%20s, %4d :' % \
                        (proj.projection_system.name, proj.projection_system.year)
             statline += (' %3d' % proj.w) if proj.w is not None else ' ---'
