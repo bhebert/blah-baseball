@@ -8,17 +8,43 @@ import os.path
 
 class MyProjectionManager(pm.ProjectionManager):
 
-
     def read_actuals(self, base_dir, verbose=False):
 
-        self.read_projection_csv('/Users/andrew_lim/blah-baseball/data/FanGraphs Actual Batting 2004-2013.csv', 
+        fg_batter_header = ['year', 'mlb_id', 'team', 'age', 'g', 'ab', 'pa', 
+                            'h', 'h1b', 'h2b', 'h3b', 'hr', 'r', 'rbi', 'bb', 
+                            'ibb', 'k', 'hbp', 'sf', 'sh', 'gdp', 'sb', 'cs',
+                            'avg', 'gb', 'fb', 'ld', 'iffb', 'pitches', 'balls', 
+                            'strikes', 'ifh', 'bu', 'buh', 'bbpct', 'kpct', 
+                            'bbk', 'obp', 'slg', 'ops', 'iso', 'babip', 'gbfb',
+                            'ldpct', 'gbpct', 'fbpct', 'iffbpct', 'hrfb', 
+                            'ifhpct', 'buhpct', 'woba', 'wraa', 'wrc']
+
+        self.read_projection_csv(os.path.join(base_dir, 'data/FanGraphs Actual Batting 2004-2013.csv'), 
                                  'actual', 
-                                 [2004], 
+                                 list(range(2004, 2014)), 
                                  is_actual=True, 
                                  player_type='batter', 
-                                 header_row=['year', 'mlb_id', 'team', 'age'], 
+                                 header_row=fg_batter_header,
                                  post_processor=helper.batter_post_processor, 
-                                 verbose=True)
+                                 verbose=verbose)
+
+        fg_pitcher_header = ['year', 'mlb_id', 'team', 'age', 'w', 'l', 'era',
+                             'g', 'gs', 'cg', 'sho', 'sv', 'bs', 'ip', 'tbf', 
+                             'h', 'r', 'er', 'hr', 'bb', 'ibb', 'hbp', 'wp', 
+                             'bk', 'k', 'gb', 'fb', 'ld', 'iffb', 'balls', 
+                             'strikes', 'pitches', 'rs', 'ifh', 'bu', 'buh', 
+                             'k9', 'bb9', 'kbb', 'h9', 'hr9', 'avg', 'whip',
+                             'babip', 'lobpct', 'fip', 'gbfb', 'ldpct', 'gbpct',
+                             'fbpct', 'iffbpct', 'hrfb', 'ifhpct', 'buhpct']
+
+        self.read_projection_csv(os.path.join(base_dir, 'data/FanGraphs Actual Pitching 2004-2013.csv'), 
+                                 'actual', 
+                                 list(range(2004, 2014)), 
+                                 is_actual=True, 
+                                 player_type='pitcher', 
+                                 header_row=fg_pitcher_header,
+                                 post_processor=helper.pitcher_post_processor, 
+                                 verbose=verbose)
 
 
     # Hardcoded function to read everything

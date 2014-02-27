@@ -116,6 +116,10 @@ def basic_post_processor(x,
                          name_handler=split_firstname_lastname_space,
                          strptime_format='%m/%d/%Y'):
 
+    for k in x:
+        if isinstance(x[k], str) and re.search("\s+%$", x[k]):
+            x[k] = float(re.sub("\s+%$", "", x[k]))/100
+
     if 'birthdate' in x and x['birthdate'] is not None and x['birthdate'] != '':
         try: x['birthdate'] = datetime.datetime.strptime(x['birthdate'], strptime_format)
         except: del x['birthdate']
