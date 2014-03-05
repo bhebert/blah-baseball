@@ -143,7 +143,7 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_pecota_batters_2011(self, filename, verbose=False):
 
-        header_row = ['last_name', 'first_name', 'team', '', '', '', '', '', 
+        header_row = ['fg_id','mlb_id','full_name','last_name', 'first_name', 'team', '', '', '', '', '', 
                       '', 'birthdate', '', 'pa', 'ab', 'r', 'h1b', 'h2b', 
                       'h3b', 'hr', 'rbi', 'bb', 'hbp', 'k', 'sb', 'cs', 'sac', 
                       'sf', '', '', '', '', '', '', '', '', '', '', '', '', 
@@ -180,7 +180,7 @@ class MyProjectionManager(pm.ProjectionManager):
                                  is_actual=False,
                                  player_type='batter',
                                  header_row=header_row, 
-                                 post_processor=helper.batter_post_processor,
+                                 post_processor=pecota_dc_batter_post_processor,
                                  verbose=verbose)
 
     def read_pecota_pitchers_2012(self, filename, verbose=False):
@@ -198,6 +198,8 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_pecota_batters_2013(self, filename, verbose=False):
 
+        header_row = ['fg_id','mlb_id','full_name','bp_id', 'last_name', 'first_name', '', '', '', '', '', 
+                      '','team', '', '', '', 'pa', 'ab', 'r', 'h1b', 'h2b', 
                       'h3b', 'hr', 'h', '', 'rbi', 'bb', 'hbp', 'k', 'sac', 
                       'sf', '', 'sb', 'cs', '', '', '', '', '', '', '', '', '',
                       '', '', '', '', '', '', 'dc_fl', 'rookie_fl']
@@ -205,7 +207,7 @@ class MyProjectionManager(pm.ProjectionManager):
                                  is_actual=False,
                                  player_type='batter',
                                  header_row=header_row, 
-                                 post_processor=pecota13_batter_post_processor,
+                                 post_processor=pecota_rdc_batter_post_processor,
                                  verbose=verbose)
 
     def read_pecota_pitchers_2013(self, filename, verbose=False):
@@ -219,6 +221,20 @@ class MyProjectionManager(pm.ProjectionManager):
                                  player_type='pitcher',
                                  header_row=header_row, 
                                  post_processor=pecota13_pitcher_post_processor,
+                                 verbose=verbose)
+
+    def read_pecota_batters_2014(self, filename, verbose=False):
+
+        header_row = ['fg_id','bp_id', 'last_name', 'first_name', '', '', '', '', '', 
+                      '','team', '', '', '', 'pa', 'ab', 'r', 'h1b', 'h2b', 
+                      'h3b', 'hr', 'h', '', 'rbi', 'bb', 'hbp', 'k', 'sac', 
+                      'sf', '', 'sb', 'cs', '', '', '', '', '', '', '', '', '',
+                      '', '', '', '', '', '', '', '','','','dc_fl','rookie_fl','mlb_id','','']
+        self.read_projection_csv(filename, 'pecota', 2014, 
+                                 is_actual=False,
+                                 player_type='batter',
+                                 header_row=header_row, 
+                                 post_processor=pecota_rdc_batter_post_processor,
                                  verbose=verbose)
 
     # ZIPS readers
@@ -400,6 +416,15 @@ class MyProjectionManager(pm.ProjectionManager):
 
 def pecota_dc_batter_post_processor(x):
     #print(x)
+    x2 = helper.batter_post_processor(x)
+    #print()
+    #print(x2)
+
+    if x2['dc_fl']=='F':
+        x2['pa'] = 0
+        x2['ab'] = 0
+        
+    return x2
 
 def pecota13_pitcher_post_processor(x):
     if x['rookie_fl']=='T':
@@ -410,14 +435,16 @@ def pecota13_pitcher_post_processor(x):
         x['rookie']=None
     return helper.pitcher_post_processor(x)
 
-def pecota13_batter_post_processor(x):
+def pecota_rdc_batter_post_processor(x):
     if x['rookie_fl']=='T':
         x['rookie']=1
     elif x['rookie_fl']=='F':
         x['rookie']=0
     else:
         x['rookie']=None
-    return helper.batter_post_processor(x)
+    return pecota_dc_batter_post_processor(x)
+
+
 
 def actual_pitcher_post_processor(x):
     '''
