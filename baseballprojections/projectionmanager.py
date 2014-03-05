@@ -132,11 +132,13 @@ class ProjectionManager(object):
         add_batter_projection_args = getSQLAlchemyFields(BatterProjection)
         add_pitcher_projection_args = getSQLAlchemyFields(PitcherProjection)
 
+
         for row in reader:
 
             data = dict(zip(header_row, row[:n]))
             if post_processor is not None:
                 data = post_processor(data)
+
 
             if player_type == 'batter':
                 player_data = { x: data[x] for x in add_batter_args if x in data }

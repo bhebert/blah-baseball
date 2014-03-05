@@ -12,52 +12,55 @@ class MyProjectionManager(pm.ProjectionManager):
         
 
         print('Reading PECOTA 2011...')
-        self.read_pecota_batters_2011(os.path.join(base_dir, 'Pecota Hitters 2011.csv'), verbose=verbose)
-        self.read_pecota_pitchers_2011(os.path.join(base_dir, 'Pecota Pitchers 2011.csv'), verbose=verbose)
+        self.read_pecota_batters_2011(os.path.join(base_dir, 'PecotaHitters2011.csv'), verbose=verbose)
+ #       self.read_pecota_pitchers_2011(os.path.join(base_dir, 'Pecota Pitchers 2011.csv'), verbose=verbose)
 
         print('Reading PECOTA 2012...')
-        self.read_pecota_batters_2012(os.path.join(base_dir, 'Pecota Hitters 2012.csv'), verbose=verbose)
-        self.read_pecota_pitchers_2012(os.path.join(base_dir, 'Pecota Pitchers 2012.csv'), verbose=verbose)
+        self.read_pecota_batters_2012(os.path.join(base_dir, 'PecotaHitters2012.csv'), verbose=verbose)
+#        self.read_pecota_pitchers_2012(os.path.join(base_dir, 'Pecota Pitchers 2012.csv'), verbose=verbose)
         
         print('Reading PECOTA 2013...')
-        self.read_pecota_batters_2013(os.path.join(base_dir, 'Pecota Hitters 2013.csv'),verbose=verbose)
-        self.read_pecota_pitchers_2013(os.path.join(base_dir, 'Pecota Pitchers 2013.csv'), verbose=verbose)
+        self.read_pecota_batters_2013(os.path.join(base_dir, 'PecotaHitters2013.csv'),verbose=verbose)
+#        self.read_pecota_pitchers_2013(os.path.join(base_dir, 'Pecota Pitchers 2013.csv'), verbose=verbose)
+
+        print('Reading PECOTA 2014...')
+        self.read_pecota_batters_2014(os.path.join(base_dir, 'PecotaHitters2014.csv'),verbose=verbose)
 
         print('Reading Steamer 2011...')
-        self.read_steamer_batters_2011(os.path.join(base_dir, 'Steamer Hitters 2011.csv'), verbose=verbose)
-        self.read_steamer_pitchers_2011(os.path.join(base_dir, 'Steamer Pitchers 2011.csv'), verbose=verbose)
+        self.read_steamer_batters_2011(os.path.join(base_dir, 'SteamerHitters2011.csv'), verbose=verbose)
+#        self.read_steamer_pitchers_2011(os.path.join(base_dir, 'Steamer Pitchers 2011.csv'), verbose=verbose)
 
         print('Reading Steamer 2012...')
-        self.read_steamer_batters_2012(os.path.join(base_dir, 'Steamer Hitters 2012.csv'), verbose=verbose)
-        self.read_steamer_pitchers_2012(os.path.join(base_dir, 'Steamer Pitchers 2012.csv'), verbose=verbose)
+        self.read_steamer_batters_2012(os.path.join(base_dir, 'SteamerHitters2012.csv'), verbose=verbose)
+#        self.read_steamer_pitchers_2012(os.path.join(base_dir, 'Steamer Pitchers 2012.csv'), verbose=verbose)
 
         print('Reading Steamer 2013...')
-        self.read_steamer_batters_2013(os.path.join(base_dir, 'Steamer Hitters 2013.csv'), verbose=verbose)
-        self.read_steamer_pitchers_2013(os.path.join(base_dir, 'Steamer Pitchers 2013.csv'), verbose=verbose)
+        self.read_steamer_batters_2013(os.path.join(base_dir, 'SteamerHitters2013.csv'), verbose=verbose)
+#        self.read_steamer_pitchers_2013(os.path.join(base_dir, 'Steamer Pitchers 2013.csv'), verbose=verbose)
 
         print('Reading ZIPS 2011...')
-        self.read_zips_batters_2011(os.path.join(base_dir, 'ZIPS Hitters 2011.csv'), verbose=verbose)
-        self.read_zips_pitchers_2011(os.path.join(base_dir, 'ZIPS Pitchers 2011.csv'), verbose=verbose)
+        self.read_zips_batters_2011(os.path.join(base_dir, 'ZIPSHitters2011.csv'), verbose=verbose)
+#        self.read_zips_pitchers_2011(os.path.join(base_dir, 'ZIPS Pitchers 2011.csv'), verbose=verbose)
 
         print('Reading ZIPS 2012...')
-        self.read_zips_batters_2012(os.path.join(base_dir, 'ZIPS Hitters 2012.csv'), verbose=verbose)
-        self.read_zips_pitchers_2012(os.path.join(base_dir, 'ZIPS Pitchers 2012.csv'), verbose=verbose)
+        self.read_zips_batters_2012(os.path.join(base_dir, 'ZIPSHitters2012.csv'), verbose=verbose)
+#        self.read_zips_pitchers_2012(os.path.join(base_dir, 'ZIPS Pitchers 2012.csv'), verbose=verbose)
 
         print('Reading ZIPS 2013...')
-        self.read_zips_batters_2013(os.path.join(base_dir, 'ZIPS Hitters 2013.csv'), verbose=verbose)
-        self.read_zips_pitchers_2013(os.path.join(base_dir, 'ZIPS Pitchers 2013.csv'), verbose=verbose)
+        self.read_zips_batters_2013(os.path.join(base_dir, 'ZIPSHitters2013.csv'), verbose=verbose)
+#        self.read_zips_pitchers_2013(os.path.join(base_dir, 'ZIPS Pitchers 2013.csv'), verbose=verbose)
 
         print('Reading Actuals 2011...')
-        self.read_actuals_batters_2011(os.path.join(base_dir, 'Actuals Hitters 2011.csv'), verbose=verbose)
-        self.read_actuals_pitchers_2011(os.path.join(base_dir, 'Actuals Pitchers 2011.csv'), verbose=verbose)
+        self.read_actuals_batters_2011(os.path.join(base_dir, 'ActualsHitters2011.csv'), verbose=verbose)
+#        self.read_actuals_pitchers_2011(os.path.join(base_dir, 'Actuals Pitchers 2011.csv'), verbose=verbose)
 
         print('Reading Actuals 2012...')
-        self.read_actuals_batters_2012(os.path.join(base_dir, 'Actuals Hitters 2012.csv'), verbose=verbose)
-        self.read_actuals_pitchers_2012(os.path.join(base_dir, 'Actuals Pitchers 2012.csv'), verbose=verbose)
+        self.read_actuals_batters_2012(os.path.join(base_dir, 'ActualsHitters2012.csv'), verbose=verbose)
+#        self.read_actuals_pitchers_2012(os.path.join(base_dir, 'Actuals Pitchers 2012.csv'), verbose=verbose)
 
         print('Reading Actuals 2013...')
-        self.read_actuals_batters_2013(os.path.join(base_dir, 'Actuals Hitters 2013.csv'), verbose=verbose)
-        self.read_actuals_pitchers_2013(os.path.join(base_dir, 'Actuals Pitchers 2013.csv'), verbose=verbose)
+        self.read_actuals_batters_2013(os.path.join(base_dir, 'ActualsHitters2013.csv'), verbose=verbose)
+#        self.read_actuals_pitchers_2013(os.path.join(base_dir, 'Actuals Pitchers 2013.csv'), verbose=verbose)
 
     # Actuals readers
     
