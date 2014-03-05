@@ -38,6 +38,11 @@ class MyProjectionManager(pm.ProjectionManager):
         self.read_steamer_batters_2013(os.path.join(base_dir, 'SteamerHitters2013.csv'), verbose=verbose)
 #        self.read_steamer_pitchers_2013(os.path.join(base_dir, 'Steamer Pitchers 2013.csv'), verbose=verbose)
 
+        print('Reading Steamer 2014...')
+        self.read_steamer_batters_2014(os.path.join(base_dir, 'SteamerHitters2014.csv'), verbose=verbose)
+#        self.read_steamer_pitchers_2013(os.path.join(base_dir, 'Steamer Pitchers 2013.csv'), verbose=verbose)
+
+
         print('Reading ZIPS 2011...')
         self.read_zips_batters_2011(os.path.join(base_dir, 'ZIPSHitters2011.csv'), verbose=verbose)
 #        self.read_zips_pitchers_2011(os.path.join(base_dir, 'ZIPS Pitchers 2011.csv'), verbose=verbose)
@@ -48,6 +53,10 @@ class MyProjectionManager(pm.ProjectionManager):
 
         print('Reading ZIPS 2013...')
         self.read_zips_batters_2013(os.path.join(base_dir, 'ZIPSHitters2013.csv'), verbose=verbose)
+#        self.read_zips_pitchers_2013(os.path.join(base_dir, 'ZIPS Pitchers 2013.csv'), verbose=verbose)
+
+        print('Reading ZIPS 2014...')
+        self.read_zips_batters_2014(os.path.join(base_dir, 'ZipsHitters2014.csv'), verbose=verbose)
 #        self.read_zips_pitchers_2013(os.path.join(base_dir, 'ZIPS Pitchers 2013.csv'), verbose=verbose)
 
         print('Reading Actuals 2011...')
@@ -274,6 +283,17 @@ class MyProjectionManager(pm.ProjectionManager):
                                  header_row=header_row, 
                                  post_processor=helper.batter_post_processor,
                                  verbose=verbose)
+        
+    def read_zips_batters_2014(self, filename, verbose=False):
+
+        header_row = ['full_name', 'g','pa', 'ab', 'h', 'h2b', 'h3b', 'hr', 
+                      'r','rbi', 'bb', 'k', 'hbp', 'sb', 'cs', 'avg', 'obp','slg','','','','','','fg_id']
+        self.read_projection_csv(filename, 'zips', 2014, 
+                                 is_actual=False,
+                                 player_type='batter',
+                                 header_row=header_row, 
+                                 post_processor=helper.batter_post_processor,
+                                 verbose=verbose)
 
     def read_zips_pitchers_2013(self, filename, verbose=False):
 
@@ -366,6 +386,20 @@ class MyProjectionManager(pm.ProjectionManager):
                                  header_row=header_row, 
                                  post_processor=steamer2013_post_processor,
                                  verbose=verbose)
+        
+    def read_steamer_batters_2014(self, filename, verbose=False):
+
+        header_row = ['full_name', 'pa', 'ab', 'h', 'h2b', 'h3b', 'hr', 
+                      'r','rbi', 'bb', 'k', 'hbp', 'sb', 'cs', 'avg', 'obp','slg','','','','','','fg_id']
+        self.read_projection_csv(filename, 'steamer', 2014, 
+                                 is_actual=False,
+                                 player_type='batter',
+                                 header_row=header_row, 
+                                 post_processor=helper.batter_post_processor,
+                                 verbose=verbose)
+
+def pecota_dc_batter_post_processor(x):
+    #print(x)
 
 def pecota13_pitcher_post_processor(x):
     if x['rookie_fl']=='T':
