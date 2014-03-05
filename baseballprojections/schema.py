@@ -15,7 +15,7 @@ class Player(Base):
     mlb_id = Column(String(20))
     retrosheet_id = Column(String(20))
     bp_id = Column(String(20))
-    fangraphs_id = Column(String(20))
+    fg_id = Column(String(20))
     lahman_id = Column(String(20))
     steamer_id = Column(String(20))
 
@@ -32,12 +32,12 @@ class Player(Base):
         return (from_date - self.birthdate)
 
     def prettyprint(self):
-        print('%s, %s (id: %d, MLB ID: %s)' % \
-              (self.last_name, self.first_name, self.id, self.mlb_id))
+        print('%s, %s (id: %d, FG ID: %s)' % \
+              (self.last_name, self.first_name, self.id, self.fg_id))
 
     @classmethod
     def id_fields(cls):
-        return ['mlb_id', 'retrosheet_id', 'bp_id', 'fangraphs_id', 
+        return ['mlb_id', 'retrosheet_id', 'bp_id', 'fg_id', 
                 'lahman_id', 'steamer_id']
 
     @classmethod

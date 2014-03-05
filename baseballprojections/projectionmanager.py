@@ -224,7 +224,7 @@ class ProjectionManager(object):
 
                 for player, pair in players:
                     #print player, pair
-                    key = str(player.mlb_id) + "_" + str(year)
+                    key = str(player.fg_id) + "_" + str(year)
                     projs = { system: None for system in systems2 }
 
                     for (_, projection) in pair:

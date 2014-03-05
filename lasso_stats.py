@@ -132,13 +132,13 @@ for player_type in player_types:
 
     first_names = {}
     last_names = {}
-    mlb_ids = {}
+    fg_ids = {}
     positions = {}
     for player, pairs in players:
-        key = str(player.mlb_id) + "_" + str(curr_year)
+        key = str(player.fg_id) + "_" + str(curr_year)
         first_names[key] = player.first_name
         last_names[key] = player.last_name
-        mlb_ids[key] = player.mlb_id
+        fg_ids[key] = player.fg_id
         for (_, projection) in pairs:
             sys = projection.projection_system
             if sys.name == 'steamer' :
@@ -430,7 +430,7 @@ for player_type in player_types:
 
         
 
-    cols = ['mlb_id','last_name','first_name','positions']
+    cols = ['fg_id','last_name','first_name','positions']
     cols.extend(stats[player_type])
 
     with open(csvfile, 'w') as f:
@@ -442,7 +442,7 @@ for player_type in player_types:
         player_years.reverse()
 
         for k in player_years:
-            row = {'mlb_id': mlb_ids[k] ,
+            row = {'fg_id': fg_ids[k] ,
                    'first_name': first_names[k],
                    'last_name': last_names[k],
                    'positions': positions[k],
