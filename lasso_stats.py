@@ -21,14 +21,14 @@ base_dir = "/Users/bhebert/Dropbox/Baseball/CSVs for DB"
 
 pm = MyProjectionManager('sqlite:///projections.db')
 
-#pm.read_everything_csv(base_dir = base_dir,verbose=False)
+pm.read_everything_csv(base_dir = base_dir,verbose=False)
 
 # what coefs get printed to stdout during the run
 print_nonzero_coefs_only = True
 
-player_types = ['batter','pitcher']
+#player_types = ['batter','pitcher']
 #player_types = ['pitcher']
-#player_types = ['batter']
+player_types = ['batter']
 playing_times = {'batter':'pa', 'pitcher':'g'}
 stats = {'batter':['pa', 'ab', 'obp', 'slg', 'sbrate', 'csrate', 'runrate', 'rbirate'],
          'pitcher':['g','gs','ip','era','whip','sv','winrate','krate']}
@@ -59,8 +59,10 @@ else:
     
     
 
-proj_years = [2011, 2012]
-curr_year = 2013
+proj_years = [2011, 2012, 2013]
+curr_year = 2014
+
+rmse_test = False
 
 stat_functions = { stat: None for stat in (set(stats['batter']) | set(stats['pitcher'])) }
 def stat_ops(p):
@@ -288,7 +290,7 @@ for player_type in player_types:
             aux_cols.extend(list(map(lambda team: 'team_%s' % team, helper.valid_teams[2:])))
         else:
             x = get_final_regs(x,yrs,weight)
-            aux_cols = ['yrs']
+            aux_cols = list(map(lambda yr: 'yr_lt_%d' % yr, proj_years[0:-1]))
 
  
         
@@ -305,7 +307,7 @@ for player_type in player_types:
         if use_lars:
             models[stat] = LassoLarsCV(cv=cv_num, normalize=False)
         else:
-            models[stat] = LassoCV(cv=cv_num, normalize=True)
+            models[stat] = LassoCV(cv=cv_num, normalize=False)
         models[stat].fit(x,y)
 
         print("Model for " + stat)
@@ -336,19 +338,25 @@ for player_type in player_types:
         projs = pm.get_player_year_data([curr_year], proj_systems, 
                                         player_type, proj_stats, 
                                         stat_functions)
+        ptstat = playing_times[player_type]
+        
+        if rmse_test:
 
-        actuals = pm.get_player_year_data([curr_year], ['actual'], 
+            actuals = pm.get_player_year_data([curr_year], ['actual'], 
                                         player_type, [stat], 
                                         stat_functions)
 
-        ptstat = playing_times[player_type]
+        
 
-        actualspt = pm.get_player_year_data([curr_year], ['actual'], 
+            actualspt = pm.get_player_year_data([curr_year], ['actual'], 
                                         player_type, [ptstat], 
                                         stat_functions)[ptstat]
 
-        pset = set(actuals[stat].keys())
-        pset = pset & set(actualspt.keys())
+            pset = set(actuals[stat].keys())
+            pset = pset & set(actualspt.keys())
+        else:
+            pset = set(projs[stat].keys())
+            
         for st in proj_stats:
             pset = pset & set(projs[st].keys())
         player_years2 = list(pset)
@@ -365,12 +373,15 @@ for player_type in player_types:
                 systems2 = list(filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems))
                 row.extend(projs[st][pyear][system] for system in systems2)
             ivars2[stat].append(row)
-            depvars2[stat].append(actuals[stat][pyear]['actual'])
-            ptvars[stat].append(actualspt[pyear]['actual'])
+            if rmse_test:
+                depvars2[stat].append(actuals[stat][pyear]['actual'])
+                ptvars[stat].append(actualspt[pyear]['actual'])
      
         x = numpy.array(ivars2[stat])
-        y = numpy.array(depvars2[stat])
-        pt = numpy.array(ptvars[stat])
+
+        if rmse_test:
+            y = numpy.array(depvars2[stat])
+            pt = numpy.array(ptvars[stat])
 
         w = weight * variances[stat]
 
@@ -387,7 +398,7 @@ for player_type in player_types:
                     x[:,j] = standardize(x[:,j],w)
                 j = j + 1
 
-        y
+        
         #print x
 
         yrs =     get_year_var(player_years, proj_years)
@@ -415,16 +426,17 @@ for player_type in player_types:
         systems = list(filter(lambda s: not ((stat in ['sv','saverate']) and s=='zips'),proj_systems))
 
         # Don't weight errors for playing-time variables
-        if st in ['pa','ab','g','gs','ip','sv']:
-            pt = numpy.ones(y.shape)
+        if rmse_test:
+            if st in ['pa','ab','g','gs','ip','sv']:
+                pt = numpy.ones(y.shape)
 
-        print()
-        print("Final %s RMSE: %f" % (stat,getRMSE(final_stat_proj,y,pt)))
+            print()
+            print("Final %s RMSE: %f" % (stat,getRMSE(final_stat_proj,y,pt)))
 
-        j = 0
-        for sys in systems:
-            print("%s  %s RMSE: %f" % (sys, stat, getRMSE(xproj[:,j],y,pt)))
-            j = j+1
+            j = 0
+            for sys in systems:
+                print("%s  %s RMSE: %f" % (sys, stat, getRMSE(xproj[:,j],y,pt)))
+                j = j+1
             
         
 
