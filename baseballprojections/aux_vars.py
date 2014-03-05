@@ -10,7 +10,7 @@ def get_year_var(player_years,proj_years):
         vals = pyear.split("_")
         row = []
         for year in proj_years[0:-1]:
-            if int(vals[1]) == year:
+            if int(vals[1]) <= year:
                 dummy = 1
             else:
                 dummy = 0
