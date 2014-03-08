@@ -50,12 +50,16 @@ if old_model:
     # This seems to produce terrible results. Not sure why.
     no_yr_weight = False
     use_lars = True
+    x2vars = True
+    norm = False
 else:
-    cv_num = 10;
-    weight = 1;
+    cv_num = 20;
+    weight = 0.01;
     min_pts ={'batter':150, 'pitcher':15}
-    no_yr_weight = False
+    no_yr_weight = True
     use_lars = False
+    norm = False
+    x2vars = True
     
     
 
@@ -282,22 +286,26 @@ for player_type in player_types:
         # print filter(lambda x: x[1][0] is None, zip(fp_years, ages))
         aux3 = numpy.hstack((aux2,teams))
 
+
+
         if old_model:
-            x = get_final_regs(x,aux3,weight)
-            aux_cols = ['yrs', 'rookies', 'age']
+            x = get_final_regs(x,aux3,weight,x2vars)
+            aux_cols = list(map(lambda yr: 'yr_lt_%d' % yr, proj_years[0:-1])) 
+            aux_cols.extend(['rookies','age'])
             aux_cols.extend(["%s * %s" % (c1, c2)
                     for (c1, c2) in itertools.combinations(aux_cols, 2)])
             aux_cols.extend(list(map(lambda team: 'team_%s' % team, helper.valid_teams[2:])))
         else:
-            x = get_final_regs(x,yrs,weight)
+            x = get_final_regs(x,yrs,weight,x2vars)
             aux_cols = list(map(lambda yr: 'yr_lt_%d' % yr, proj_years[0:-1]))
 
  
         
         cross_cols = []
         for i in range(len(coef_cols)):
-            for j in range(i, len(coef_cols)):
-                cross_cols.append("%s * %s" % (coef_cols[i], coef_cols[j]))
+            if x2vars:
+                for j in range(i, len(coef_cols)):
+                    cross_cols.append("%s * %s" % (coef_cols[i], coef_cols[j]))
             for aux_col in aux_cols:
                 cross_cols.append("%s * %s" % (coef_cols[i], aux_col))
 
@@ -305,9 +313,9 @@ for player_type in player_types:
         coef_cols.extend(cross_cols)
 
         if use_lars:
-            models[stat] = LassoLarsCV(cv=cv_num, normalize=False)
+            models[stat] = LassoLarsCV(cv=cv_num, normalize=norm)
         else:
-            models[stat] = LassoCV(cv=cv_num, normalize=False)
+            models[stat] = LassoCV(cv=cv_num, normalize=norm)
         models[stat].fit(x,y)
 
         print("Model for " + stat)
@@ -415,9 +423,9 @@ for player_type in player_types:
         aux3 = numpy.hstack((aux2,teams))
 
         if old_model:
-            x2 = get_final_regs(x,aux3,weight)
+            x2 = get_final_regs(x,aux3,weight,x2vars)
         else:
-            x2 = get_final_regs(x,yrs,weight)
+            x2 = get_final_regs(x,yrs,weight,x2vars)
         
         final_stat_proj = models[stat].predict(x2)
         final_projs[stat] = dict(zip(player_years,final_stat_proj))
