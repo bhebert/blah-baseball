@@ -7,9 +7,11 @@ class MyProjectionManager(pm.ProjectionManager):
 
     # Hardcoded function to read everything
 
-    def read_everything_csv(self, base_dir, verbose=False):
+    def read_everything_csv(self, base_dir, read_register=True, verbose=False):
 
-        
+        if read_register:
+            print('Reading Chadwick Register...')
+            self.read_register(os.path.join(base_dir, 'register.csv'), verbose=verbose)
 
         print('Reading PECOTA 2011...')
         self.read_pecota_batters_2011(os.path.join(base_dir, 'PecotaHitters2011.csv'), verbose=verbose)
@@ -70,6 +72,21 @@ class MyProjectionManager(pm.ProjectionManager):
         print('Reading Actuals 2013...')
         self.read_actuals_batters_2013(os.path.join(base_dir, 'ActualsHitters2013.csv'), verbose=verbose)
 #        self.read_actuals_pitchers_2013(os.path.join(base_dir, 'Actuals Pitchers 2013.csv'), verbose=verbose)
+
+
+    # This reads the Chadwick register, to load up all the IDs.
+
+    def read_register(self, filename, verbose=False):
+
+        header_row = ['mlb_id','bp_id','fg_id','fg_minor_id','last_name','first_name',
+                      '','','','','bats','throws','height','weight',
+                      'birth_year','birth_month','birth_day']
+        self.read_projection_csv(filename, 'register', 2011,
+                                 is_actual=True,
+                                 player_type='all',
+                                 header_row=header_row, 
+                                 post_processor=register_processor,
+                                 verbose=verbose)
 
     # Actuals readers
     
@@ -414,6 +431,19 @@ class MyProjectionManager(pm.ProjectionManager):
                                  post_processor=helper.batter_post_processor,
                                  verbose=verbose)
 
+def register_processor(x):
+    if x['fg_id'] is None or x['fg_id']=='':
+        x['fg_id'] = x['fg_minor_id']
+
+    if (x['birth_year'] is not None and x['birth_day'] is not None and x['birth_month'] is not None and
+        len(x['birth_year'])>0 and len(x['birth_day'])>0 and len(x['birth_month'])>0):
+        strdate= '%s/%s/%s' % (x['birth_month'],x['birth_day'],x['birth_year'])
+        try:
+            x['birthdate']= datetime.datetime.strptime(strdate.rstrip(), '%m/%d/%Y')
+        except Exception as e:
+            print('Error computing birthdate')
+            print(x)
+    return x
 def pecota_dc_batter_post_processor(x):
     #print(x)
     x2 = helper.batter_post_processor(x)

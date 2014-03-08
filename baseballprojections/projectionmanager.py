@@ -38,11 +38,14 @@ class ProjectionManager(object):
         elif player_type == 'pitcher':
             #player_class = Pitcher
             player_class = Player
+        elif player_type == 'all':
+            player_class = Player
         else:
             raise Exception('Error: add_or_update_player must be called with '\
-                            'player_type = either "batter" or "pitcher"')
+                            'player_type = either "batter" or "pitcher" or "all"')
 
         matches = []
+
         id_clauses = [ (getattr(player_class, k) == kwargs[k])
                        for k in Player.id_fields() 
                        if (k in kwargs and kwargs[k] != '') ]
@@ -51,7 +54,7 @@ class ProjectionManager(object):
                          if (k in kwargs and kwargs[k] != '') ]
         
         criteria = {}
-        if len(id_clauses) > 0:
+        if player_type != 'all' and len(id_clauses) > 0:
             matches = self.query(player_class).filter(or_(*id_clauses)).all()
             names_only = False
         elif len(name_clauses) > 0:
@@ -61,6 +64,7 @@ class ProjectionManager(object):
             raise Exception('Error: add_or_update_player must be called with '\
                             'at least one id parameter or both last_name and '\
                             'first_name parameters')
+        match = None
 
         if len(matches) > 1:
             raise Exception('Error: multiple matches found: %s' % matches)
@@ -74,6 +78,13 @@ class ProjectionManager(object):
                 raise Exception('Error: could not find player matching '\
                                 'criteria %s' % kwargs)
             else:
+        elif len(id_clauses) > 0:
+            #if names_only:
+ #               raise Exception('Error: could not find player matching '\
+#                                'criteria %s' % kwargs)
+#            else:
+            
+            if player_type == 'all':
                 match = player_class(**kwargs)
                 self.session.add(match)
 
@@ -117,11 +128,12 @@ class ProjectionManager(object):
                             player_type, header_row, post_processor=None, 
                             skip_rows=1, verbose=False):
 
-        if player_type not in ('batter', 'pitcher'):
+        if player_type not in ('batter', 'pitcher','all'):
             raise Exception('player_type is %s, must be either '\
-                            '"batter" or "pitcher"' % player_type)
+                            '"batter" or "pitcher" or "all"' % player_type)
 
-        projection_system = self.add_or_update_projection_system('%s' % projection_name, 
+        if player_type != 'all':
+            projection_system = self.add_or_update_projection_system('%s' % projection_name, 
                                                                  year, 
                                                                  is_actual)
         reader = csv.reader(open(filename, 'r'))
@@ -129,6 +141,7 @@ class ProjectionManager(object):
             next(reader)
         n = len(header_row)
 
+        add_player_args = getSQLAlchemyFields(Player)
         add_batter_args = getSQLAlchemyFields(Batter)
         add_pitcher_args = getSQLAlchemyFields(Pitcher)
         add_batter_projection_args = getSQLAlchemyFields(BatterProjection)
@@ -156,7 +169,7 @@ class ProjectionManager(object):
                     if verbose:
                         print(e)
 
-            else:
+            elif player_type == 'pitcher':
                 player_data = { x: data[x] for x in add_pitcher_args if x in data }
                 player_data['player_type'] = 'pitcher'
                 try:
@@ -169,7 +182,16 @@ class ProjectionManager(object):
                 except Exception as e:
                     if verbose:
                         print(e)
-
+                        
+            elif player_type == 'all':
+                player_data = { x: data[x] for x in add_player_args if x in data }
+                player_data['player_type'] = 'all'
+                try:
+                    player = self.add_or_update_player(**player_data)
+                except Exception as e:
+                    if verbose:
+                        print(e)
+                        
             if verbose:
                 print('%s, %s' % (player, projection))
 

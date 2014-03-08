@@ -20,8 +20,9 @@ base_dir = "/Users/bhebert/Dropbox/Baseball/CSVs for DB"
 
 
 pm = MyProjectionManager('sqlite:///projections.db')
+#pm = MyProjectionManager()
 
-pm.read_everything_csv(base_dir = base_dir,verbose=False)
+pm.read_everything_csv(base_dir = base_dir,read_register=True, verbose=False)
 
 # what coefs get printed to stdout during the run
 print_nonzero_coefs_only = True
