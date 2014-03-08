@@ -82,7 +82,7 @@ class ProjectionManager(object):
             
             if player_type == 'all':
                 match = player_class(**kwargs)
-                self.session.add(match)
+                self.session.merge(match)
 
         self.session.commit()
         return match
