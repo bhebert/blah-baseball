@@ -27,6 +27,7 @@ class MyProjectionManager(pm.ProjectionManager):
 
         print('Reading PECOTA 2014...')
         self.read_pecota_batters_2014(os.path.join(base_dir, 'PecotaHitters2014.csv'),verbose=verbose)
+        self.read_pecota_pfm_2014(os.path.join(base_dir, 'BP_PFM_2014.csv'),verbose=verbose)
 
         print('Reading Steamer 2011...')
         self.read_steamer_batters_2011(os.path.join(base_dir, 'SteamerHitters2011.csv'), verbose=verbose)
@@ -240,6 +241,16 @@ class MyProjectionManager(pm.ProjectionManager):
                                  post_processor=pecota13_pitcher_post_processor,
                                  verbose=verbose)
 
+    def read_pecota_pfm_2014(self, filename, verbose=False):
+
+        header_row = ['full_name', 'positions', 'mlb_id', '', '', '', '', 'dollars']
+        self.read_projection_csv(filename, 'pfm', 2014, 
+                                 is_actual=False,
+                                 player_type='batter',
+                                 header_row=header_row, 
+                                 post_processor=pfm_processor,
+                                 verbose=verbose)
+
     def read_pecota_batters_2014(self, filename, verbose=False):
 
         header_row = ['bp_id', 'last_name', 'first_name', '', '', '', '', '', 
@@ -444,6 +455,12 @@ def register_processor(x):
             print('Error computing birthdate')
             print(x)
     return x
+
+def pfm_processor(x):
+    if x['positions'] in ['RP','SP','Swing']:
+        return {}
+    else:
+        return x
 
 def zips_batter_post_processor(x):
     if x['mlb_id'] == '#N/A':

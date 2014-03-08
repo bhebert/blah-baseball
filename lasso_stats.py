@@ -148,7 +148,7 @@ for player_type in player_types:
         fg_ids[key] = player.fg_id
         for (_, projection) in pairs:
             sys = projection.projection_system
-            if sys.name == 'steamer' :
+            if sys.name == 'pfm' :
                  if player_type == 'batter':
                     positions[key] = getattr(projection,'positions')
                  else:
