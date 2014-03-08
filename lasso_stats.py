@@ -53,6 +53,7 @@ if old_model:
     use_lars = True
     x2vars = True
     norm = False
+    norm_other_stats = True
 else:
     cv_num = 20;
     weight = 0.01;
@@ -61,6 +62,7 @@ else:
     use_lars = False
     norm = False
     x2vars = True
+    norm_other_stats = False
     
     
 
@@ -252,22 +254,22 @@ for player_type in player_types:
         x = numpy.array(ivars[stat])
         y = numpy.array(depvars[stat])
 
-        variances[stat] = numpy.std(y)
-        w = weight * variances[stat]
+ 
 
-        #print x
+        if norm_other_stats:
+            variances[stat] = numpy.std(y)
+            w = weight * variances[stat]
         
-        # Normalize the other stats used
-        j = 0
-        for st in proj_stats:
-            systems2 = filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems)
-            for system in systems2:
-                if st != stat:
-                    x[:,j] = standardize(x[:,j],w)
-                j = j + 1
-        #y = standardize(y,1)
+            # Normalize the other stats used
+            j = 0
+            for st in proj_stats:
+                systems2 = filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems)
+                for system in systems2:
+                    if st != stat:
+                        x[:,j] = standardize(x[:,j],w)
+                    j = j + 1
+            #y = standardize(y,1)
 
-        #print x
                 
         # start adding in auxiliaries
         yrs =     get_year_var(fp_years, proj_years)
@@ -275,7 +277,7 @@ for player_type in player_types:
              yrs =  yrs / weight           
         
         rookies = get_rookie_var(fp_years, proj_years, 'actual', player_type, pm)
-        ages =    get_age_var(fp_years, proj_years, 'actual', player_type, pm,w)
+        ages =    get_age_var(fp_years, proj_years, 'actual', player_type, pm,weight)
 
         aux = numpy.hstack((yrs, rookies, ages))
         aux2 = add_quad_interactions(aux)
@@ -392,23 +394,25 @@ for player_type in player_types:
             y = numpy.array(depvars2[stat])
             pt = numpy.array(ptvars[stat])
 
-        w = weight * variances[stat]
+            j = 0
+            for st in proj_stats:
+                systems2 = list(filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems))
+                if st == stat:
+                    xproj = x[:,j:j+len(systems2)]
+                j = j + len(systems2)
 
-        #print x
-        
-        # Normalize the other stats used
-        j = 0
-        for st in proj_stats:
-            systems2 = list(filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems))
-            if st == stat:
-                xproj = x[:,j:j+len(systems2)]
-            for system in systems2:
-                if st != stat:
-                    x[:,j] = standardize(x[:,j],w)
-                j = j + 1
+        if norm_other_stats:
+            w = weight * variances[stat]
+            
+            # Normalize the other stats used
+            j = 0
+            for st in proj_stats:
+                systems2 = list(filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems))
+                for system in systems2:
+                    if st != stat:
+                        x[:,j] = standardize(x[:,j],w)
+                    j = j + 1
 
-        
-        #print x
 
         yrs =     get_year_var(player_years, proj_years)
         if no_yr_weight:

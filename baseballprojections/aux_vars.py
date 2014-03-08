@@ -80,7 +80,8 @@ def get_age_var(player_years, proj_years, system, player_type, pm, weight):
             ages.append([0])
 
     ages1 = numpy.array(ages)
-    ages1[:,0] = standardize(ages1[:,0],weight)
+    if weight > 0:
+        ages1[:,0] = standardize(ages1[:,0],weight)
     return ages1
 
 def standardize(vec, weight):
@@ -111,7 +112,10 @@ def get_final_regs(x,aux, weight,x2=True):
     regs = []
     xstand = numpy.copy(x)
     for j  in range(0,len(x[0])):
-        xstand[:,j] = standardize(x[:,j],weight)
+        if weight > 0:
+            xstand[:,j] = standardize(x[:,j],weight)
+        else:
+            xstand[:,j] = x[:,j]
     for i in range(0,len(x)):
         rowx = x[i]
         rowxn = xstand[i]
@@ -129,6 +133,9 @@ def get_final_regs(x,aux, weight,x2=True):
         regs.append(row2)
         
     xregs = numpy.array(regs)
-    auxw = aux * weight
+    if weight > 0:
+        auxw = aux * weight
+    else:
+        auxw = aux
     return numpy.hstack((x,auxw, xregs))
     #return numpy.hstack((x,xregs))
