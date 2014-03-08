@@ -244,7 +244,7 @@ class ProjectionManager(object):
     # Helper functions for the Lasso code
 
     def get_player_year_data(self, years, systems, player_type, stats, 
-                             stat_functions):
+                             stat_functions, includeMissing=False):
 
         proj_data = {}
 
@@ -276,7 +276,7 @@ class ProjectionManager(object):
                         if sys.name in projs:
                             projs[sys.name] = stat_function(projection)
 
-                    if not any(map(lambda x: x is None, projs.values())):
+                    if includeMissing or not any(map(lambda x: x is None, projs.values())):
                         #print "ADDING %s, %s: %s" % (player.last_name, player.first_name, projs)
                         proj_data[stat][key] = projs
                     #else:
