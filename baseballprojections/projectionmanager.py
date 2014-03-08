@@ -49,21 +49,22 @@ class ProjectionManager(object):
         id_clauses = [ (getattr(player_class, k) == kwargs[k])
                        for k in Player.id_fields() 
                        if (k in kwargs and kwargs[k] != '') ]
-        name_clauses = [ (getattr(player_class, k) == kwargs[k])
-                         for k in Player.name_fields()
-                         if (k in kwargs and kwargs[k] != '') ]
+#        name_clauses = [ (getattr(player_class, k) == kwargs[k])
+#                         for k in Player.name_fields()
+#                         if (k in kwargs and kwargs[k] != '') ]
         
         criteria = {}
         if player_type != 'all' and len(id_clauses) > 0:
             matches = self.query(player_class).filter(or_(*id_clauses)).all()
-            names_only = False
-        elif len(name_clauses) > 0:
-            matches = self.query(player_class).filter(and_(*name_clauses)).all()
-            names_only = True
-        else:
-            raise Exception('Error: add_or_update_player must be called with '\
-                            'at least one id parameter or both last_name and '\
-                            'first_name parameters')
+ #           names_only = False
+ #       elif len(name_clauses) > 0:
+ #           matches = self.query(player_class).filter(and_(*name_clauses)).all()
+ #           names_only = True
+ #       elif player_type != 'all':
+#            raise Exception('Error: add_or_update_player must be called with '\
+#                            'at least one id parameter or both last_name and '\
+#                            'first_name parameters')
+
         match = None
 
         if len(matches) > 1:
@@ -73,11 +74,6 @@ class ProjectionManager(object):
             for field, value in kwargs.items():
                 if overwrite or getattr(match, field) is None or getattr(match, field) == '':
                     setattr(match, field, value)
-        else:
-            if names_only:
-                raise Exception('Error: could not find player matching '\
-                                'criteria %s' % kwargs)
-            else:
         elif len(id_clauses) > 0:
             #if names_only:
  #               raise Exception('Error: could not find player matching '\
@@ -160,11 +156,16 @@ class ProjectionManager(object):
                 player_data['player_type'] = 'batter'
                 try:
                     player = self.add_or_update_player(**player_data)
-                    projection_data = { x: data[x] for x in add_batter_projection_args
-                                        if x in data }
-                    projection_data['batter_id'] = player.id
-                    projection_data['projection_system_id'] = projection_system.id
-                    projection = self.add_batter_projection(**projection_data)
+                    if player is None:
+                        if data['pa'] > 10:
+                            print('Player not matched:')
+                            print(player_data)
+                    else:
+                        projection_data = { x: data[x] for x in add_batter_projection_args
+                                            if x in data }
+                        projection_data['batter_id'] = player.id
+                        projection_data['projection_system_id'] = projection_system.id
+                        projection = self.add_batter_projection(**projection_data)
                 except Exception as e:
                     if verbose:
                         print(e)
@@ -174,11 +175,16 @@ class ProjectionManager(object):
                 player_data['player_type'] = 'pitcher'
                 try:
                     player = self.add_or_update_player(**player_data)
-                    projection_data = { x: data[x] for x in add_pitcher_projection_args
-                                        if x in data }
-                    projection_data['pitcher_id'] = player.id
-                    projection_data['projection_system_id'] = projection_system.id
-                    projection = self.add_pitcher_projection(**projection_data)
+                    if player is None:
+                        if data['ip'] > 5:
+                            print('Player not matched:')
+                            print(player_data)
+                    else:
+                        projection_data = { x: data[x] for x in add_pitcher_projection_args
+                                            if x in data }
+                        projection_data['pitcher_id'] = player.id
+                        projection_data['projection_system_id'] = projection_system.id
+                        projection = self.add_pitcher_projection(**projection_data)
                 except Exception as e:
                     if verbose:
                         print(e)
