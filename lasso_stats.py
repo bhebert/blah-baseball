@@ -22,7 +22,7 @@ base_dir = "/Users/bhebert/Dropbox/Baseball/CSVs for DB"
 pm = MyProjectionManager('sqlite:///projections.db')
 #pm = MyProjectionManager()
 
-pm.read_everything_csv(base_dir = base_dir,read_register=True, verbose=False)
+#pm.read_everything_csv(base_dir = base_dir,read_register=True, verbose=False)
 
 # what coefs get printed to stdout during the run
 print_nonzero_coefs_only = True
@@ -33,7 +33,7 @@ player_types = ['batter']
 playing_times = {'batter':'pa', 'pitcher':'g'}
 stats = {'batter':['pa', 'ab', 'obp', 'slg', 'sbrate', 'csrate', 'runrate', 'rbirate'],
          'pitcher':['g','gs','ip','era','whip','sv','winrate','krate']}
-#stats = {'batter':['pa','sbrate'],'pitcher':['ip','era']}
+#stats = {'batter':['pa','obp'],'pitcher':['ip','era']}
         # 'pitcher':['g','era','krate']}
 proj_systems = ['pecota', 'zips', 'steamer']
 proj_systems_sv = ['pecota','steamer']
@@ -53,6 +53,7 @@ if old_model:
     use_lars = True
     x2vars = True
     norm = False
+    use_gls = False
     norm_other_stats = True
 else:
     cv_num = 20;
@@ -62,6 +63,7 @@ else:
     use_lars = False
     norm = False
     x2vars = True
+    use_gls = True
     norm_other_stats = False
     filter_rates = False
     min_sample_pts = {'batter':300,'pitcher':30}
@@ -174,6 +176,8 @@ for player_type in player_types:
                                          stat_functions)[playing_time]
 
     player_years = list(set(pt_actuals.keys()) & set(pt_projs.keys()))
+
+    
     random.shuffle(player_years)
 
     ivars = []
@@ -211,6 +215,9 @@ for player_type in player_types:
 
     ivars = {}
     depvars = {}
+    ptvars = {}
+
+    player_lists = {}
 
     for stat in stats[player_type]:
 
@@ -229,7 +236,14 @@ for player_type in player_types:
                                           player_type, [stat],
                                           stat_functions)[stat]
 
+        ptstat = playing_times[player_type]
+
+        actualspt = pm.get_player_year_data(proj_years, ['actual'], 
+                                        player_type, [ptstat], 
+                                        stat_functions)[ptstat]
+
         pset = set(actuals.keys())
+        pset = pset & set(actualspt.keys())
         for st in proj_stats:
             pset = pset & set(projs[st].keys())
         player_years = list(pset)
@@ -244,6 +258,7 @@ for player_type in player_types:
 
         ivars[stat] = []
         depvars[stat] = []
+        ptvars[stat] = []
         coef_cols = []
 
         for st in proj_stats:
@@ -258,9 +273,13 @@ for player_type in player_types:
                 row.extend(projs[st][pyear][system] for system in systems2)
             ivars[stat].append(row)
             depvars[stat].append(actuals[pyear]['actual'])
+            ptvars[stat].append(actualspt[pyear]['actual'])
 
         x = numpy.array(ivars[stat])
         y = numpy.array(depvars[stat])
+        pt = numpy.array(ptvars[stat])
+
+        
 
  
 
@@ -323,10 +342,25 @@ for player_type in player_types:
         coef_cols.extend(aux_cols)
         coef_cols.extend(cross_cols)
 
+        using_gls = use_gls and stat not in ['pa','ab','ip','g','gs','sv']
+
         if use_lars:
-            models[stat] = LassoLarsCV(cv=cv_num, normalize=norm)
+            models[stat] = LassoLarsCV(cv=cv_num, normalize=norm and not using_gls, fit_intercept=not using_gls)
         else:
-            models[stat] = LassoCV(cv=cv_num, normalize=norm)
+            models[stat] = LassoCV(cv=cv_num, normalize=norm and not using_gls, fit_intercept=not using_gls)
+
+        if using_gls:
+            for j in range(0,len(x[0])):
+                x[:,j] = standardize(x[:,j],1)
+            msqpt = numpy.mean(numpy.sqrt(pt))
+            y = numpy.multiply(y,numpy.sqrt(pt)) / msqpt
+            x = numpy.dot(numpy.diag(numpy.sqrt(pt)),x)
+            x = numpy.hstack((x,numpy.sqrt(pt).reshape(-1,1))) / msqpt
+            coef_cols.extend(['intercept'])
+
+ 
+
+            
         models[stat].fit(x,y)
 
         print("Model for " + stat)
@@ -337,13 +371,14 @@ for player_type in player_types:
             for coef_col, coef in zip(coef_cols, models[stat].coef_):
                 if not (coef == 0 and print_nonzero_coefs_only):
                     print("%40s : %f" % (coef_col, coef))
-            print("%40s : %f" % ('intercept', models[stat].intercept_))
+            if not using_gls:
+                print("%40s : %f" % ('intercept', models[stat].intercept_))
         #print models[stat].coef_
         #print models[stat].intercept_
 
     ivars2 = {}
     depvars2 = {}
-    ptvars = {}
+    ptvars2 = {}
 
     for stat in stats[player_type]:
         if old_model:
@@ -385,7 +420,7 @@ for player_type in player_types:
 
         ivars2[stat] = []
         depvars2[stat] = []
-        ptvars[stat] = []
+        ptvars2[stat] = []
         for pyear in player_years:
             row = []
             for st in proj_stats:
@@ -394,13 +429,13 @@ for player_type in player_types:
             ivars2[stat].append(row)
             if rmse_test:
                 depvars2[stat].append(actuals[stat][pyear]['actual'])
-                ptvars[stat].append(actualspt[pyear]['actual'])
+                ptvars2[stat].append(actualspt[pyear]['actual'])
      
         x = numpy.array(ivars2[stat])
 
         if rmse_test:
             y = numpy.array(depvars2[stat])
-            pt = numpy.array(ptvars[stat])
+            pt = numpy.array(ptvars2[stat])
 
             j = 0
             for st in proj_stats:
@@ -439,6 +474,15 @@ for player_type in player_types:
             x2 = get_final_regs(x,aux3,weight,x2vars)
         else:
             x2 = get_final_regs(x,yrs,weight,x2vars)
+
+        using_gls = use_gls and stat not in ['pa','ab','ip','g','gs','sv']
+
+        if using_gls:
+            for j in range(0,len(x[0])):
+                x2[:,j] = standardize(x2[:,j],1)
+            x2 = numpy.hstack((x2, numpy.ones_like(rookies)))
+
+
         
         final_stat_proj = models[stat].predict(x2)
         final_projs[stat] = dict(zip(player_years,final_stat_proj))
