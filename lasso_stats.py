@@ -133,6 +133,11 @@ stat_functions['krate'] = stat_krate
 
 variances = {}
 
+if curr_year == 2013:
+    pos_sys = 'steamer'
+else:
+    pos_sys = 'pfm'
+
 for player_type in player_types:
     csvfile = player_type + "Projs.csv"
     playing_time = playing_times[player_type]
@@ -154,7 +159,7 @@ for player_type in player_types:
         fg_ids[key] = player.fg_id
         for (_, projection) in pairs:
             sys = projection.projection_system
-            if sys.name == 'pfm' :
+            if sys.name == pos_sys :
                  if player_type == 'batter':
                     positions[key] = getattr(projection,'positions')
                  else:
