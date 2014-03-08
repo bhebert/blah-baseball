@@ -158,7 +158,7 @@ class ProjectionManager(object):
                 try:
                     player = self.add_or_update_player(**player_data)
                     if player is None:
-                        if data['pa'] > 10:
+                        if verbose or 'mlb_id' in data or 'fg_id' in data:
                             print('Player not matched:')
                             print(player_data)
                     else:
@@ -177,7 +177,7 @@ class ProjectionManager(object):
                 try:
                     player = self.add_or_update_player(**player_data)
                     if player is None:
-                        if data['ip'] > 5:
+                        if verbose or 'mlb_id' in data or 'fg_id' in data:
                             print('Player not matched:')
                             print(player_data)
                     else:
