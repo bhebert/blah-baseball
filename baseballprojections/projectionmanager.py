@@ -84,7 +84,7 @@ class ProjectionManager(object):
                 match = player_class(**kwargs)
                 self.session.merge(match)
 
-        self.session.commit()
+#        self.session.commit()
         return match
 
     def add_or_update_projection_system(self, name, year, is_actual):
@@ -99,7 +99,7 @@ class ProjectionManager(object):
             projection_system = ProjectionSystem(name=name, year=year, 
                                                  is_actual=is_actual)
             self.session.add(projection_system)
-            self.session.commit()
+#            self.session.commit()
         return projection_system
 
     def add_batter_projection(self, **kwargs):
@@ -108,7 +108,7 @@ class ProjectionManager(object):
         """
         projection = BatterProjection(**kwargs)
         self.session.add(projection)
-        self.session.commit()
+#        self.session.commit()
         return projection
 
     def add_pitcher_projection(self, **kwargs):
@@ -117,7 +117,7 @@ class ProjectionManager(object):
         """
         projection = PitcherProjection(**kwargs)
         self.session.add(projection)
-        self.session.commit()
+ #       self.session.commit()
         return projection
 
     def read_projection_csv(self, filename, projection_name, year, is_actual,
@@ -143,6 +143,7 @@ class ProjectionManager(object):
         add_batter_projection_args = getSQLAlchemyFields(BatterProjection)
         add_pitcher_projection_args = getSQLAlchemyFields(PitcherProjection)
 
+        count = 0
 
         for row in reader:
 
@@ -200,6 +201,13 @@ class ProjectionManager(object):
                         
             if verbose:
                 print('%s, %s' % (player, projection))
+
+            count = count+1
+            if count % 1000 == 0:
+                print('loaded %d' % count)
+                self.session.commit()
+                
+        self.session.commit()
 
     # shortcuts
 
