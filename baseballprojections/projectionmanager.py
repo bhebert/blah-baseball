@@ -33,9 +33,11 @@ class ProjectionManager(object):
         """
 
         if player_type == 'batter':
-            player_class = Batter
+            #player_class = Batter
+            player_class = Player
         elif player_type == 'pitcher':
-            player_class = Pitcher
+            #player_class = Pitcher
+            player_class = Player
         else:
             raise Exception('Error: add_or_update_player must be called with '\
                             'player_type = either "batter" or "pitcher"')
@@ -183,7 +185,9 @@ class ProjectionManager(object):
 
     def batter_projection_groups(self, filter_clause=None):
 
-        q = self.query(Batter, BatterProjection).\
+ #       q = self.query(Batter, BatterProjection).\
+#                 join(BatterProjection).join(ProjectionSystem)
+        q = self.query(Player, BatterProjection).\
                  join(BatterProjection).join(ProjectionSystem)
         if filter_clause is not None:
             q = q.filter(filter_clause)
@@ -192,7 +196,9 @@ class ProjectionManager(object):
 
     def pitcher_projection_groups(self, filter_clause=None):
 
-        q = self.query(Pitcher, PitcherProjection).\
+ #       q = self.query(Pitcher, PitcherProjection).\
+#                 join(PitcherProjection).join(ProjectionSystem)
+        q = self.query(Player, PitcherProjection).\
                  join(PitcherProjection).join(ProjectionSystem)
         if filter_clause is not None:
             q = q.filter(filter_clause)
