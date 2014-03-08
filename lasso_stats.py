@@ -56,12 +56,12 @@ if old_model:
     use_gls = False
     norm_other_stats = True
 else:
-    cv_num = 20;
-    weight = 0.01;
+    cv_num = 20
+    weight = -1
     min_pts ={'batter':150, 'pitcher':15}
-    no_yr_weight = True
+    no_yr_weight = False
     use_lars = False
-    norm = False
+    norm = True
     x2vars = True
     use_gls = True
     norm_other_stats = False
