@@ -266,7 +266,7 @@ class MyProjectionManager(pm.ProjectionManager):
                                  is_actual=False,
                                  player_type='batter',
                                  header_row=header_row, 
-                                 post_processor=helper.batter_post_processor,
+                                 post_processor=zips_batter_post_processor,
                                  verbose=verbose)
 
     def read_zips_pitchers_2011(self, filename, verbose=False):
@@ -290,7 +290,7 @@ class MyProjectionManager(pm.ProjectionManager):
                                  is_actual=False,
                                  player_type='batter',
                                  header_row=header_row, 
-                                 post_processor=helper.batter_post_processor,
+                                 post_processor=zips_batter_post_processor,
                                  verbose=verbose)
 
     def read_zips_pitchers_2012(self, filename, verbose=False):
@@ -302,7 +302,7 @@ class MyProjectionManager(pm.ProjectionManager):
                                  is_actual=False,
                                  player_type='pitcher',
                                  header_row=header_row, 
-                                 post_processor=helper.pitcher_post_processor,
+                                 post_processor=zips_pitcher_post_processor,
                                  verbose=verbose)
 
     def read_zips_batters_2013(self, filename, verbose=False):
@@ -314,7 +314,7 @@ class MyProjectionManager(pm.ProjectionManager):
                                  is_actual=False,
                                  player_type='batter',
                                  header_row=header_row, 
-                                 post_processor=helper.batter_post_processor,
+                                 post_processor=zips_batter_post_processor,
                                  verbose=verbose)
         
     def read_zips_batters_2014(self, filename, verbose=False):
@@ -444,6 +444,13 @@ def register_processor(x):
             print('Error computing birthdate')
             print(x)
     return x
+
+def zips_batter_post_processor(x):
+    if x['mlb_id'] == '#N/A':
+        del x['mlb_id']
+
+    return helper.batter_post_processor(x)
+
 def pecota_dc_batter_post_processor(x):
     #print(x)
     x2 = helper.batter_post_processor(x)
