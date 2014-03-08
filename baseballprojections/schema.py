@@ -209,8 +209,9 @@ class BatterProjection(Base):
     # avg = Column(Float)
     # obp = Column(Float)
     # slg = Column(Float)
-    # positions = Column(String(20))
-    # rookie = Column(Integer)
+
+    positions = Column(String(20))
+    rookie = Column(Integer)
 
     def __repr__(self):
         return '<BatterProjection %d>' % (self.id)
@@ -301,7 +302,7 @@ class PitcherProjection(Base):
     # g = Column(Float)
     # gs = Column(Float)
 
-    # rookie = Column(Integer)
+    rookie = Column(Integer)
 
     def __repr__(self):
         return '<PitcherProjection %d>' % (self.id)
