@@ -107,7 +107,7 @@ def add_quad_interactions(aux):
     xquads = numpy.array(quads)    
     return numpy.hstack((aux, xquads))
 
-def get_final_regs(x,aux, weight):
+def get_final_regs(x,aux, weight,x2=True):
     regs = []
     xstand = numpy.copy(x)
     for j  in range(0,len(x[0])):
@@ -119,9 +119,10 @@ def get_final_regs(x,aux, weight):
         rowaux = aux[i]
         rowaux_x = []
         for j in range(0,len(rowx)):
-            for k in range(j,len(rowx)):
-                val = rowx[j]*rowxn[k]
-                row2.extend([val])
+            if x2:
+                for k in range(j,len(rowx)):
+                    val = rowx[j]*rowxn[k]
+                    row2.extend([val])
             for k  in range(0,len(rowaux)):
                 rowaux_x.extend([rowxn[j]*rowaux[k]])
         row2.extend(rowaux_x)
