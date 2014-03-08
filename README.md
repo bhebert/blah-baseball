@@ -20,7 +20,7 @@ If you want to add any new projections, just add some new CSV readers in the sam
 
 Easiest to work from the Python prompt IMHO and start off everything with
 
-    > execfile('projections.py')
+    > exec(open("projections.py").read())
 
 Example that creates a database `projections.db`. The argument to `MyProjectionManager` matches whatever [SQLAlchemy allows](http://docs.sqlalchemy.org/en/rel_0_8/core/engines.html), and if you leave it blank it'll create an in-memory SQLite3 database. 
 
