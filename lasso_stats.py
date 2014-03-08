@@ -63,6 +63,8 @@ else:
     norm = False
     x2vars = True
     norm_other_stats = False
+    filter_rates = False
+    min_sample_pts = {'batter':300,'pitcher':30}
     
     
 
@@ -233,6 +235,12 @@ for player_type in player_types:
         player_years = list(pset)
         fp_years = list(filter(lambda k: k in sample_proj_pt and sample_proj_pt[k] > min_pts[player_type], player_years))
         random.shuffle(fp_years)
+
+        if filter_rates and stat not in ['pa','ab','ip','g','gs','sv']:
+            fp_years = list(filter(lambda k: k in actualspt and actualspt[k]['actual'] > min_sample_pts[player_type], fp_years))
+
+
+        player_lists[stat] = fp_years
 
         ivars[stat] = []
         depvars[stat] = []
