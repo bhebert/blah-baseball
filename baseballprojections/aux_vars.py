@@ -84,10 +84,30 @@ def get_age_var(player_years, proj_years, system, player_type, pm, weight):
         ages1[:,0] = standardize(ages1[:,0],weight)
     return ages1
 
+def get_dc_var(player_years,proj_years,player_type,pm):
+    stat_functions = {
+        'dc_dummy': lambda p: p.dc_fl is not None and p.dc_fl == 'T'
+    }
+    data = pm.get_player_year_data(proj_years, ['pecota'],
+                                   player_type, ['dc_dummy'],
+                                   stat_functions)['dc_dummy']
+    dcs = []
+    for pyear in player_years:
+        if pyear in data:
+            dcs.append([data[pyear]['pecota']])
+        else:
+            print('Warning: dc flag missing')
+            print(pyear)
+            dcs.append([0])
+    return dcs
+
 def standardize(vec, weight):
     vecvar = numpy.std(vec)
-    vecmean = numpy.mean(vec)
-    return (vec - vecmean) / vecvar * weight
+    if vecvar > 0:
+        vecmean = numpy.mean(vec)
+        return (vec - vecmean) / vecvar * weight
+    else:
+        return vec
 
 def getRMSE(act,proj,weight):
     act2 = act - numpy.mean(act) - proj + numpy.mean(proj)
