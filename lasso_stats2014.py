@@ -28,11 +28,11 @@ pm = MyProjectionManager('sqlite:///projections.db')
 print_nonzero_coefs_only = True
 
 #player_types = ['batter','pitcher']
-#player_types = ['pitcher']
-player_types = ['batter']
-playing_times = {'batter':'pa', 'pitcher':'g'}
+player_types = ['pitcher']
+#player_types = ['batter']
+playing_times = {'batter':'pa', 'pitcher':'ip'}
 stats = {'batter':['pa', 'ab', 'obp', 'slg', 'sbrate', 'csrate', 'runrate', 'rbirate'],
-         'pitcher':['g','gs','ip','era','whip','sv','winrate','krate']}
+         'pitcher':['g','gs','ip','era','whip','saverate','winrate','krate']}
 #stats = {'batter':['pa','obp'],'pitcher':['ip','era']}
         # 'pitcher':['g','era','krate']}
 proj_systems = ['pecota', 'zips', 'steamer']
@@ -41,15 +41,15 @@ all_systems = ['actual','pecota','zips','steamer']
 
 # model settings
 cv_num = 20
-min_pts ={'batter':150, 'pitcher':15}
+min_pts ={'batter':150, 'pitcher':40}
 use_lars = False
 norm = True
 x2vars = True
 use_gls = True
 filter_rates = False
-min_sample_pts = {'batter':300,'pitcher':30}
+min_sample_pts = {'batter':300,'pitcher':40}
 use_rookies = True
-use_ages = True
+use_ages = False
 use_teams = False
     
     
@@ -66,8 +66,10 @@ def stat_ops(p):
     else:
         return None
 def stat_runrate(p):
-    if p.pa is not None and p.r is not None and p.pa > 0:
-        return p.r / p.pa
+    if p.pa is not None and p.r is not None and p.pa > 0 and p.obp is not None and p.obp > 0:
+        return p.r / (p.pa*p.obp)
+    elif p.pa is not None and p.r is not None and p.pa > 0 and p.obp is not None and p.obp == 0:
+        return 0
     else:
         return None
 def stat_rbirate(p):
@@ -98,9 +100,11 @@ def stat_saverate(p):
         return None
 def stat_winrate(p):
     if p.g is not None and p.w is not None and p.g > 0:
-         return p.w / p.g
+        return p.w / p.g
+    elif p.g is not None and p.w is not None and p.g ==0 and p.w == 0:
+        return 0
     else:
-         return None
+        return None
 def stat_krate(p):
     if p.k is not None and p.ip is not None and p.ip > 0:
          return p.k / p.ip
@@ -215,7 +219,7 @@ for player_type in player_types:
     for stat in stats[player_type]:
 
         proj_stats = [stat]
-        if stat in  ['sv','saverate']:
+        if stat in  ['sv']:
             proj_stats = [stat,'g','gs','era','krate']
             
         projs = pm.get_player_year_data(proj_years, proj_systems,
@@ -350,7 +354,7 @@ for player_type in player_types:
 
     for stat in stats[player_type]:
         proj_stats = [stat]
-        if stat in  ['sv','saverate']:
+        if stat in  ['sv']:
             proj_stats = [stat,'g','gs','era','krate']
         
       
