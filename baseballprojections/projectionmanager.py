@@ -201,8 +201,9 @@ class ProjectionManager(object):
                 except Exception as e:
                         print(e)
                         
-            if verbose and player is not None and projection is not None:
-                print('%s, %s' % (player, projection))
+            if verbose and (player is not None) and (projection is not None):
+                #print('%s, %s' % (player, projection))
+                print('%s',player)
 
             count = count+1
             if count % 1000 == 0:
