@@ -147,6 +147,9 @@ class ProjectionManager(object):
 
         for row in reader:
 
+            player = None
+            projection = None
+
             data = dict(zip(header_row, row[:n]))
             if post_processor is not None:
                 data = post_processor(data)
@@ -168,7 +171,7 @@ class ProjectionManager(object):
                         projection_data['projection_system_id'] = projection_system.id
                         projection = self.add_batter_projection(**projection_data)
                 except Exception as e:
-                    if verbose:
+                        print(data)
                         print(e)
 
             elif player_type == 'pitcher':
@@ -187,7 +190,7 @@ class ProjectionManager(object):
                         projection_data['projection_system_id'] = projection_system.id
                         projection = self.add_pitcher_projection(**projection_data)
                 except Exception as e:
-                    if verbose:
+                        print(data)
                         print(e)
                         
             elif player_type == 'all':
@@ -196,10 +199,9 @@ class ProjectionManager(object):
                 try:
                     player = self.add_or_update_player(**player_data)
                 except Exception as e:
-                    if verbose:
                         print(e)
                         
-            if verbose:
+            if verbose and player is not None and projection is not None:
                 print('%s, %s' % (player, projection))
 
             count = count+1
