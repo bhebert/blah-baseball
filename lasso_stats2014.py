@@ -27,8 +27,8 @@ pm = MyProjectionManager('sqlite:///projections.db')
 # what coefs get printed to stdout during the run
 print_nonzero_coefs_only = True
 
-#player_types = ['batter','pitcher']
-player_types = ['pitcher']
+player_types = ['batter','pitcher']
+#player_types = ['pitcher']
 #player_types = ['batter']
 playing_times = {'batter':'pa', 'pitcher':'ip'}
 stats = {'batter':['pa', 'ab', 'obp', 'slg', 'sbrate', 'csrate', 'runrate', 'rbirate'],
@@ -44,7 +44,7 @@ cv_num = 20
 min_pts ={'batter':150, 'pitcher':40}
 use_lars = False
 norm = True
-x2vars = True
+x2vars = False
 use_gls = True
 filter_rates = False
 min_sample_pts = {'batter':300,'pitcher':40}
@@ -460,6 +460,9 @@ for player_type in player_types:
 
             j = 0
             for sys in systems:
+                if sys == 'pecota' and st in ['pa','ab','g','gs','ip']:
+                    temp = xproj[:,j]
+                    xproj[:,j] = numpy.multiply(temp,numpy.squeeze(pecota_dc))
                 print("%s  %s RMSE: %f" % (sys, stat, getRMSE(xproj[:,j],y,pt)))
                 j = j+1
             
