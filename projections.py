@@ -367,7 +367,7 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_zips_pitchers_2014(self, filename, verbose=False):
 
-        header_row = [ 'full_name', 'w', 'l', 'era', 'g', 'gs', 'ip', 
+        header_row = [ 'full_name', 'w', 'l', 'era', 'gs', 'g', 'ip', 
                       'h', 'er', 'hr', 'k', 'bb', 'whip', '', '', '', '', 'fg_id'] 
         self.read_projection_csv(filename, 'zips', 2014, 
                                  is_actual=False,
@@ -469,7 +469,7 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_steamer_pitchers_2014(self, filename, verbose=False):
 
-        header_row = [ 'full_name', 'w', 'l', 'era', 'g', 'gs', 'sv','ip', 
+        header_row = [ 'full_name', 'w', 'l', 'era', 'gs', 'g', 'sv','ip', 
                       'h', 'er', 'hr', 'k', 'bb', 'whip', '', '', '', '', 'fg_id'] 
         self.read_projection_csv(filename, 'steamer', 2014, 
                                  is_actual=False,
