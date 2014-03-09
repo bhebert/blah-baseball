@@ -37,7 +37,7 @@ stats = {'batter':['pa', 'ab', 'obp', 'slg', 'sbrate', 'csrate', 'runrate', 'rbi
         # 'pitcher':['g','era','krate']}
 proj_systems = ['pecota', 'zips', 'steamer']
 proj_systems_sv = ['pecota','steamer']
-
+all_systems = ['actual','pecota','zips','steamer']
 
 # model settings
 cv_num = 20
@@ -48,7 +48,7 @@ x2vars = True
 use_gls = True
 filter_rates = False
 min_sample_pts = {'batter':300,'pitcher':30}
-use_rookies = False
+use_rookies = True
 use_ages = False
 use_teams = False
     
@@ -279,7 +279,7 @@ for player_type in player_types:
         aux_cols.extend(['dc_dummy'])
         
         if use_rookies:
-            rookies = get_rookie_var(fp_years, proj_years, 'actual', player_type, pm)
+            rookies = get_rookie_var(fp_years, proj_years, all_systems, player_type, pm)
             aux = numpy.hstack((aux,rookies))
             aux_cols.extend(['rookies'])
 
@@ -415,7 +415,7 @@ for player_type in player_types:
         aux = numpy.hstack((yrs,pecota_dc))
         
         if use_rookies:
-            rookies = get_rookie_var(player_years, [curr_year], 'actual', player_type, pm)
+            rookies = get_rookie_var(player_years, [curr_year], all_systems, player_type, pm)
             aux = numpy.hstack((aux,rookies))
  
         if use_ages:

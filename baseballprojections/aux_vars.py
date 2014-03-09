@@ -35,16 +35,25 @@ def get_team_vars(player_years, proj_years, system, player_type, pm):
             dummies.append([0] * len(vteams))
     return numpy.array(dummies)
 
-def get_rookie_var(player_years, proj_years, system, player_type,pm):
+def get_rookie_var(player_years, proj_years, systems, player_type,pm):
     
-    rookies = pm.get_player_year_data(proj_years, [system],
+    rookies = pm.get_player_year_data(proj_years, systems,
                                          player_type, ['rookie'],
-                                         {'rookie':None})['rookie']
+                                         {'rookie':None},True)['rookie']
     dummies = []
     for pyear in player_years:
-        if pyear in rookies:
-            dummies.append([rookies[pyear][system]])
+        rdummy = None
+        for sys in systems:
+            if rookies[pyear][sys] is not None and rdummy is None:
+                rdummy = rookies[pyear][sys]
+            elif rookies[pyear][sys] is not None and rookies[pyear][sys] != rdummy:
+                print('Warning: rookie status differs by system')
+                print(pyear)
+        if rdummy is not None:
+            dummies.append([rdummy])
         else:
+            print('Warning: rookie status not found')
+            print(pyear)
             dummies.append([0])
     return numpy.array(dummies)
 
