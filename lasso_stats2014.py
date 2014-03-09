@@ -33,11 +33,16 @@ player_types = ['batter','pitcher']
 playing_times = {'batter':'pa', 'pitcher':'ip'}
 stats = {'batter':['pa', 'ab', 'obp', 'slg', 'sbrate', 'csrate', 'runrate', 'rbirate'],
          'pitcher':['g','gs','ip','era','whip','saverate','winrate','krate']}
-#stats = {'batter':['pa','obp'],'pitcher':['ip','era']}
+#stats = {'batter':['pa','obp'],'pitcher':['g','ip','winrate']}
         # 'pitcher':['g','era','krate']}
 proj_systems = ['pecota', 'zips', 'steamer']
 proj_systems_sv = ['pecota','steamer']
 all_systems = ['actual','pecota','zips','steamer']
+
+# For each stat, what is the corresponding playing time stat?
+ptstats = {'pa': None, 'ab': None, 'obp': 'pa', 'slg': 'ab', 'sbrate': 'tob', 'csrate': 'tob',
+           'runrate': 'tob', 'rbirate': 'pa', 'g': None, 'gs': None, 'ip': None, 'krate':'ip',
+           'era': 'ip', 'whip': 'ip', 'saverate': 'gr', 'winrate': 'g'}
 
 # model settings
 cv_num = 20
@@ -46,18 +51,25 @@ use_lars = False
 norm = True
 x2vars = False
 use_gls = True
+
+# I think this code is broken. The min sample sized
+# needs to be changed to reflect the different pt stats.
 filter_rates = False
 min_sample_pts = {'batter':300,'pitcher':40}
+
 use_rookies = True
 use_ages = False
 use_teams = False
+special_winrate = False
     
-    
-
-proj_years = [2011, 2012, 2013]
-curr_year = 2014
-
 rmse_test = False
+
+if rmse_test:
+    proj_years = [2011,2012]
+    curr_year = 2013
+else:
+    proj_years = [2011, 2012, 2013]
+    curr_year = 2014
 
 stat_functions = { stat: None for stat in (set(stats['batter']) | set(stats['pitcher'])) }
 def stat_ops(p):
@@ -110,6 +122,42 @@ def stat_krate(p):
          return p.k / p.ip
     else:
          return None
+def stat_tob(p):
+    if p.pa is not None and p.obp is not None:
+        return p.pa * p.obp
+    else:
+        return None
+def stat_gr(p):
+    if p.g is not None and p.gs is not None:
+        return p.g - p.gs
+    else:
+        return None
+def stat_gfrac(p):
+    if p.g is not None and p.gs is not None and p.g > 0:
+        return (p.gs*2 > p.g)
+    elif p.g is not None and p.gs is not None and p.g ==0 and p.gs == 0:
+        return 0
+    else:
+        return None
+def stat_winrate_gf(p):
+    if p.g is not None and p.gs is not None and p.g > 0 and p.w is not None: 
+        return p.w / p.g * (p.gs*2 > p.g)
+    elif p.g is not None and p.w is not None and p.gs is not None and p.g ==0 and (p.w == 0 or p.gs == 0):
+        return 0
+    else:
+        return None
+    
+def stat_winrate_ngf(p):
+    if p.g is not None and p.gs is not None and p.g > 0 and p.w is not None: 
+        return p.w / p.g * (p.gs*2 <= p.g)
+    elif p.g is not None and p.w is not None and p.gs is not None and p.g ==0 and (p.w == 0 or p.gs == 0):
+        return 0
+    else:
+        return None
+
+
+
+        
 stat_functions['ops'] = stat_ops
 stat_functions['runrate'] = stat_runrate
 stat_functions['rbirate'] = stat_rbirate
@@ -118,8 +166,11 @@ stat_functions['csrate'] = stat_csrate
 stat_functions['saverate'] = stat_saverate
 stat_functions['winrate'] = stat_winrate
 stat_functions['krate'] = stat_krate
-
-variances = {}
+stat_functions['tob'] = stat_tob
+stat_functions['gr'] = stat_gr
+stat_functions['gfrac'] = stat_gfrac
+stat_functions['winrate_gf'] = stat_winrate_gf
+stat_functions['winrate_ngf'] = stat_winrate_ngf
 
 if curr_year == 2013:
     pos_sys = 'steamer'
@@ -221,6 +272,9 @@ for player_type in player_types:
         proj_stats = [stat]
         if stat in  ['sv']:
             proj_stats = [stat,'g','gs','era','krate']
+
+        if special_winrate and stat == 'winrate':
+            proj_stats = ['winrate_ngf','winrate_gf','gfrac']
             
         projs = pm.get_player_year_data(proj_years, proj_systems,
                                         player_type, proj_stats,
@@ -230,14 +284,18 @@ for player_type in player_types:
                                           player_type, [stat],
                                           stat_functions)[stat]
 
-        ptstat = playing_times[player_type]
+        pset = set(actuals.keys())
 
-        actualspt = pm.get_player_year_data(proj_years, ['actual'], 
+        ptstat = ptstats[stat]
+
+        if ptstat is not None:
+
+            actualspt = pm.get_player_year_data(proj_years, ['actual'], 
                                         player_type, [ptstat], 
                                         stat_functions)[ptstat]
-
-        pset = set(actuals.keys())
-        pset = pset & set(actualspt.keys())
+            pset = pset & set(actualspt.keys())
+ 
+ 
         for st in proj_stats:
             pset = pset & set(projs[st].keys())
         player_years = list(pset)
@@ -267,11 +325,12 @@ for player_type in player_types:
                 row.extend(projs[st][pyear][system] for system in systems2)
             ivars[stat].append(row)
             depvars[stat].append(actuals[pyear]['actual'])
-            ptvars[stat].append(actualspt[pyear]['actual'])
+            if ptstat is not None:
+                ptvars[stat].append(actualspt[pyear]['actual'])
 
         x = numpy.array(ivars[stat])
         y = numpy.array(depvars[stat])
-        pt = numpy.array(ptvars[stat])
+ 
 
                 
         # start adding in auxiliaries
@@ -301,11 +360,14 @@ for player_type in player_types:
             aux2 = numpy.hstack((aux2,teams))
             aux_cols.extend(list(map(lambda team: 'team_%s' % team, helper.valid_teams[2:])))
 
-        x = get_final_regs(x,aux2,-1,x2vars)
+        use_x2vars = x2vars
+        #or (special_winrate and stat == 'winrate')
+
+        x = get_final_regs(x,aux2,-1,use_x2vars)
         
         cross_cols = []
         for i in range(len(coef_cols)):
-            if x2vars:
+            if use_x2vars:
                 for j in range(i, len(coef_cols)):
                     cross_cols.append("%s * %s" % (coef_cols[i], coef_cols[j]))
             for aux_col in aux_cols:
@@ -314,7 +376,7 @@ for player_type in player_types:
         coef_cols.extend(aux_cols)
         coef_cols.extend(cross_cols)
 
-        using_gls = use_gls and stat not in ['pa','ab','ip','g','gs','sv']
+        using_gls = use_gls and ptstat is not None
 
         if use_lars:
             models[stat] = LassoLarsCV(cv=cv_num, normalize=norm and not using_gls, fit_intercept=not using_gls)
@@ -322,6 +384,7 @@ for player_type in player_types:
             models[stat] = LassoCV(cv=cv_num, normalize=norm and not using_gls, fit_intercept=not using_gls)
 
         if using_gls:
+            pt = numpy.array(ptvars[stat])
             for j in range(0,len(x[0])):
                 x[:,j] = standardize(x[:,j],1)
             msqpt = numpy.mean(numpy.sqrt(pt))
@@ -356,29 +419,34 @@ for player_type in player_types:
         proj_stats = [stat]
         if stat in  ['sv']:
             proj_stats = [stat,'g','gs','era','krate']
-        
+
+        if special_winrate and stat == 'winrate':
+            proj_stats = ['winrate_ngf','winrate_gf','gfrac']
       
         projs = pm.get_player_year_data([curr_year], proj_systems, 
                                         player_type, proj_stats, 
                                         stat_functions)
-        ptstat = playing_times[player_type]
+        
+        ptstat = ptstats[stat] 
         
         if rmse_test:
 
             actuals = pm.get_player_year_data([curr_year], ['actual'], 
                                         player_type, [stat], 
                                         stat_functions)
+            
+            pset = set(actuals[stat].keys())
+            
+             
 
-        
-
-            actualspt = pm.get_player_year_data([curr_year], ['actual'], 
+            if ptstat is not None:
+                actualspt = pm.get_player_year_data([curr_year], ['actual'], 
                                         player_type, [ptstat], 
                                         stat_functions)[ptstat]
 
-            pset = set(actuals[stat].keys())
-            pset = pset & set(actualspt.keys())
+                pset = pset & set(actualspt.keys())
         else:
-            pset = set(projs[stat].keys())
+            pset = set(projs[proj_stats[0]].keys())
             
         for st in proj_stats:
             pset = pset & set(projs[st].keys())
@@ -395,16 +463,22 @@ for player_type in player_types:
             for st in proj_stats:
                 systems2 = list(filter(lambda s: not ((st in ['sv','saverate']) and s=='zips'),proj_systems))
                 row.extend(projs[st][pyear][system] for system in systems2)
+
+##            if pyear == '2036_2014':
+##                print(row)
+##                print(len(ivars2[stat]))
+##                print(player_years.index('2036_2014'))
+                
             ivars2[stat].append(row)
             if rmse_test:
                 depvars2[stat].append(actuals[stat][pyear]['actual'])
-                ptvars2[stat].append(actualspt[pyear]['actual'])
+                if ptstat is not None:
+                    ptvars2[stat].append(actualspt[pyear]['actual'])
      
         x = numpy.array(ivars2[stat])
 
         if rmse_test:
             y = numpy.array(depvars2[stat])
-            pt = numpy.array(ptvars2[stat])
 
             j = 0
             for st in proj_stats:
@@ -433,12 +507,15 @@ for player_type in player_types:
             teams   = get_team_vars(player_years, [curr_year], 'actual', player_type, pm)
             aux2 = numpy.hstack((aux2,teams))
 
-        x2 = get_final_regs(x,aux2,-1,x2vars)
+        use_x2vars = x2vars
+        #or (special_winrate and stat == 'winrate')
 
-        using_gls = use_gls and stat not in ['pa','ab','ip','g','gs','sv']
+        x2 = get_final_regs(x,aux2,-1,use_x2vars)
+
+        using_gls = use_gls and ptstat is not None
 
         if using_gls:
-            for j in range(0,len(x[0])):
+            for j in range(0,len(x2[0])):
                 x2[:,j] = standardize(x2[:,j],1)
             x2 = numpy.hstack((x2, numpy.ones_like(pecota_dc)))
 
@@ -452,7 +529,10 @@ for player_type in player_types:
 
         # Don't weight errors for playing-time variables
         if rmse_test:
-            if st in ['pa','ab','g','gs','ip','sv']:
+
+            if ptstat is not None:
+                pt = numpy.array(ptvars2[stat])
+            else:
                 pt = numpy.ones(y.shape)
 
             print()
