@@ -135,8 +135,11 @@ variances = {}
 
 if curr_year == 2013:
     pos_sys = 'steamer'
+    pos_sys2 = None
 else:
     pos_sys = 'pfm'
+    pos_sys2 = 'pecota'
+
 
 for player_type in player_types:
     csvfile = player_type + "Projs.csv"
@@ -159,8 +162,9 @@ for player_type in player_types:
         fg_ids[key] = player.fg_id
         for (_, projection) in pairs:
             sys = projection.projection_system
-            if sys.name == pos_sys :
-                 if player_type == 'batter':
+            if sys.name in [pos_sys, pos_sys2] :
+                 if player_type == 'batter' and (
+                     sys.name == pos_sys or (sys.name == pos_sys2 and key not in positions)):
                     positions[key] = getattr(projection,'positions')
                  else:
                     positions[key] = 'P' 

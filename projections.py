@@ -253,7 +253,7 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_pecota_batters_2014(self, filename, verbose=False):
 
-        header_row = ['bp_id', 'last_name', 'first_name', '', '', '', '', '', 
+        header_row = ['bp_id', 'last_name', 'first_name', 'positions', '', '', '', '', 
                       '','team', '', '', '', 'pa', 'ab', 'r', 'h1b', 'h2b', 
                       'h3b', 'hr', 'h', '', 'rbi', 'bb', 'hbp', 'k', 'sac', 
                       'sf', '', 'sb', 'cs', '', 'obp', 'slg', '', '', '', '', '', '',
