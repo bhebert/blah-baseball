@@ -104,8 +104,8 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_actuals_pitchers_2011(self, filename, verbose=False):
 
-        header_row = ['mlb_id', 'full_name', 'team', 'w', 'sv', 'g', 'gs', 'ip', 
-                      'era', 'k9', 'h', 'bb', '', 'rookie']
+        header_row = ['full_name', 'team', 'w', 'sv', 'g', 'gs', 'ip', 
+                      'era', 'k9', 'h', 'bb', 'fg_id', 'rookie']
         self.read_projection_csv(filename, 'actual', 2011,
                                  is_actual=True,
                                  player_type='pitcher',
@@ -126,8 +126,8 @@ class MyProjectionManager(pm.ProjectionManager):
 
     def read_actuals_pitchers_2012(self, filename, verbose=False):
 
-        header_row = ['fg_id', 'full_name', 'team', 'w', 'sv', 'g', 'gs', 'ip', 
-                      'era', 'k9', 'h', 'bb', '', 'hbp', '', 'rookie']
+        header_row = ['full_name', 'team', 'w', 'sv', 'g', 'gs', 'ip', 
+                      'era', 'k9', 'h', 'bb', '', 'hbp', 'fg_id', 'rookie']
         self.read_projection_csv(filename, 'actual', 2012,
                                  is_actual=True,
                                  player_type='pitcher',
@@ -137,8 +137,8 @@ class MyProjectionManager(pm.ProjectionManager):
         
     def read_actuals_pitchers_2013(self, filename, verbose=False):
 
-        header_row = ['mlb_id', 'full_name', 'team', 'w', 'sv', 'g', 'gs', 'ip', 
-                      'era', 'k9', 'h', 'bb', '', 'hbp', '']
+        header_row = ['full_name', 'team', 'w', 'sv', 'g', 'gs', 'ip', 
+                      'era', 'k9', 'h', 'bb', '', 'hbp', 'fg_id']
         self.read_projection_csv(filename, 'actual', 2013,
                                  is_actual=True,
                                  player_type='pitcher',
