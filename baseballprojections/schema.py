@@ -128,7 +128,8 @@ class BatterProjection(Base):
     #batter_id = Column(Integer, ForeignKey('batters.id'))
     batter_id = Column(Integer, ForeignKey('players.id'))
     projection_system_id = Column(Integer, ForeignKey('projection_systems.id'))
-    UniqueConstraint('batter_id', 'projection_id')
+    #UniqueConstraint('batter_id', 'projection_id')
+    UniqueConstraint('batter_id', 'projection_system_id')
 
     team = Column(String(3))
 
@@ -224,7 +225,8 @@ class PitcherProjection(Base):
     #pitcher_id = Column(Integer, ForeignKey('pitchers.id'))
     pitcher_id = Column(Integer, ForeignKey('players.id'))
     projection_system_id = Column(Integer, ForeignKey('projection_systems.id'))
-    UniqueConstraint('pitcher_id', 'projection_id')
+    #UniqueConstraint('pitcher_id', 'projection_id')
+    UniqueConstraint('pitcher_id', 'projection_system_id')
 
     team = Column(String(3))
 
