@@ -1,6 +1,7 @@
 import datetime
 import numpy
 import baseballprojections.projectionmanager
+from baseballprojections.schema import Player
 from baseballprojections.helper import valid_teams
 
 def get_year_var(player_years,proj_years):
@@ -59,33 +60,35 @@ def get_rookie_var(player_years, proj_years, systems, player_type,pm):
 
 
 # from 1 Apr, arbitrarily
-def stat_age(p, player_type):
-    age_date = datetime.date(p.projection_system.year, 4, 1)
-    if player_type == 'batter':
-        birthdate = p.batter.birthdate
-    else:
-        birthdate = p.pitcher.birthdate
+def stat_age(p,year):
+    age_date = datetime.date(year, 4, 1)
+    birthdate = p.birthdate
+    
     if birthdate is not None:
         age = age_date - birthdate
         return age.days / 365.25
     else:
         return None
 
-
+# I have kept unnecessary arguments to maintain the 2013 version of the code
 def get_age_var(player_years, proj_years, system, player_type, pm, weight):
 
-    stat_functions = {
-        'age': lambda p: stat_age(p, player_type)
-    }
-    data = pm.get_player_year_data(proj_years, [system],
-                                   player_type, ['age'],
-                                   stat_functions)['age']
+
+    all_players = pm.query(Player).all()    
+ 
     ages = []
     for pyear in player_years:
-        if pyear in data:
-            ages.append([data[pyear][system]])
+        vals = pyear.split('_')
+
+        players = filter(lambda p: p.fg_id == vals[0], all_players)
+        age = stat_age(next(players),int(vals[1]))
+        
+        if age is not None:
+            ages.append([age])
         else:
             # if you have time get the missing ones in there
+            print('Warning: missing age')
+            print(pyear)
             ages.append([0])
 
     ages1 = numpy.array(ages)
