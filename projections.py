@@ -15,64 +15,65 @@ class MyProjectionManager(pm.ProjectionManager):
 
         print('Reading PECOTA 2011...')
         self.read_pecota_batters_2011(os.path.join(base_dir, 'PecotaHitters2011.csv'), verbose=verbose)
- #       self.read_pecota_pitchers_2011(os.path.join(base_dir, 'Pecota Pitchers 2011.csv'), verbose=verbose)
+        self.read_pecota_pitchers_2011(os.path.join(base_dir, 'Pecota Pitchers 2011.csv'), verbose=verbose)
 
         print('Reading PECOTA 2012...')
         self.read_pecota_batters_2012(os.path.join(base_dir, 'PecotaHitters2012.csv'), verbose=verbose)
-#        self.read_pecota_pitchers_2012(os.path.join(base_dir, 'Pecota Pitchers 2012.csv'), verbose=verbose)
+        self.read_pecota_pitchers_2012(os.path.join(base_dir, 'Pecota Pitchers 2012.csv'), verbose=verbose)
         
         print('Reading PECOTA 2013...')
         self.read_pecota_batters_2013(os.path.join(base_dir, 'PecotaHitters2013.csv'),verbose=verbose)
-#        self.read_pecota_pitchers_2013(os.path.join(base_dir, 'Pecota Pitchers 2013.csv'), verbose=verbose)
+        self.read_pecota_pitchers_2013(os.path.join(base_dir, 'Pecota Pitchers 2013.csv'), verbose=verbose)
 
         print('Reading PECOTA 2014...')
         self.read_pecota_batters_2014(os.path.join(base_dir, 'PecotaHitters2014.csv'),verbose=verbose)
+        self.read_pecota_pitchers_2014(os.path.join(base_dir, 'Pecota Pitchers 2014.csv'), verbose=verbose)
         self.read_pecota_pfm_2014(os.path.join(base_dir, 'BP_PFM_2014.csv'),verbose=verbose)
 
         print('Reading Steamer 2011...')
         self.read_steamer_batters_2011(os.path.join(base_dir, 'SteamerHitters2011.csv'), verbose=verbose)
-#        self.read_steamer_pitchers_2011(os.path.join(base_dir, 'Steamer Pitchers 2011.csv'), verbose=verbose)
+        self.read_steamer_pitchers_2011(os.path.join(base_dir, 'Steamer Pitchers 2011.csv'), verbose=verbose)
 
         print('Reading Steamer 2012...')
         self.read_steamer_batters_2012(os.path.join(base_dir, 'SteamerHitters2012.csv'), verbose=verbose)
-#        self.read_steamer_pitchers_2012(os.path.join(base_dir, 'Steamer Pitchers 2012.csv'), verbose=verbose)
+        self.read_steamer_pitchers_2012(os.path.join(base_dir, 'Steamer Pitchers 2012.csv'), verbose=verbose)
 
         print('Reading Steamer 2013...')
         self.read_steamer_batters_2013(os.path.join(base_dir, 'SteamerHitters2013.csv'), verbose=verbose)
-#        self.read_steamer_pitchers_2013(os.path.join(base_dir, 'Steamer Pitchers 2013.csv'), verbose=verbose)
+        self.read_steamer_pitchers_2013(os.path.join(base_dir, 'Steamer Pitchers 2013.csv'), verbose=verbose)
 
         print('Reading Steamer 2014...')
         self.read_steamer_batters_2014(os.path.join(base_dir, 'SteamerHitters2014.csv'), verbose=verbose)
-#        self.read_steamer_pitchers_2013(os.path.join(base_dir, 'Steamer Pitchers 2013.csv'), verbose=verbose)
+        self.read_steamer_pitchers_2014(os.path.join(base_dir, 'Steamer Pitchers 2014.csv'), verbose=verbose)
 
 
         print('Reading ZIPS 2011...')
         self.read_zips_batters_2011(os.path.join(base_dir, 'ZIPSHitters2011.csv'), verbose=verbose)
-#        self.read_zips_pitchers_2011(os.path.join(base_dir, 'ZIPS Pitchers 2011.csv'), verbose=verbose)
+        self.read_zips_pitchers_2011(os.path.join(base_dir, 'ZIPS Pitchers 2011.csv'), verbose=verbose)
 
         print('Reading ZIPS 2012...')
         self.read_zips_batters_2012(os.path.join(base_dir, 'ZIPSHitters2012.csv'), verbose=verbose)
-#        self.read_zips_pitchers_2012(os.path.join(base_dir, 'ZIPS Pitchers 2012.csv'), verbose=verbose)
+        self.read_zips_pitchers_2012(os.path.join(base_dir, 'ZIPS Pitchers 2012.csv'), verbose=verbose)
 
         print('Reading ZIPS 2013...')
         self.read_zips_batters_2013(os.path.join(base_dir, 'ZIPSHitters2013.csv'), verbose=verbose)
-#        self.read_zips_pitchers_2013(os.path.join(base_dir, 'ZIPS Pitchers 2013.csv'), verbose=verbose)
+        self.read_zips_pitchers_2013(os.path.join(base_dir, 'ZIPS Pitchers 2013.csv'), verbose=verbose)
 
         print('Reading ZIPS 2014...')
         self.read_zips_batters_2014(os.path.join(base_dir, 'ZipsHitters2014.csv'), verbose=verbose)
-#        self.read_zips_pitchers_2013(os.path.join(base_dir, 'ZIPS Pitchers 2013.csv'), verbose=verbose)
+        self.read_zips_pitchers_2014(os.path.join(base_dir, 'ZIPS Pitchers 2014.csv'), verbose=verbose)
 
         print('Reading Actuals 2011...')
         self.read_actuals_batters_2011(os.path.join(base_dir, 'ActualsHitters2011.csv'), verbose=verbose)
-#        self.read_actuals_pitchers_2011(os.path.join(base_dir, 'Actuals Pitchers 2011.csv'), verbose=verbose)
+        self.read_actuals_pitchers_2011(os.path.join(base_dir, 'ActualsPitchers2011.csv'), verbose=verbose)
 
         print('Reading Actuals 2012...')
         self.read_actuals_batters_2012(os.path.join(base_dir, 'ActualsHitters2012.csv'), verbose=verbose)
-#        self.read_actuals_pitchers_2012(os.path.join(base_dir, 'Actuals Pitchers 2012.csv'), verbose=verbose)
+        self.read_actuals_pitchers_2012(os.path.join(base_dir, 'ActualsPitchers2012.csv'), verbose=verbose)
 
         print('Reading Actuals 2013...')
         self.read_actuals_batters_2013(os.path.join(base_dir, 'ActualsHitters2013.csv'), verbose=verbose)
-#        self.read_actuals_pitchers_2013(os.path.join(base_dir, 'Actuals Pitchers 2013.csv'), verbose=verbose)
+        self.read_actuals_pitchers_2013(os.path.join(base_dir, 'ActualsPitchers2013.csv'), verbose=verbose)
 
 
     # This reads the Chadwick register, to load up all the IDs.
@@ -265,6 +266,19 @@ class MyProjectionManager(pm.ProjectionManager):
                                  post_processor=pecota_rdc_batter_post_processor,
                                  verbose=verbose)
 
+    def read_pecota_pitchers_2014(self, filename, verbose=False):
+
+        header_row = ['bp_id', 'last_name', 'first_name', '', '', '', '', '', 
+                      'team', '', '', '', 'w', 'l', '', 'sv', 'g', 'gs', 'ip', 
+                      'h', 'hr', 'bb', 'hbp','k', '', '', '', '', 'whip', 'era', '', 
+                      '', '', '', '', '', '', '', 'dc_fl', 'rookie_fl', 'mlb_id','','']
+        self.read_projection_csv(filename, 'pecota', 2014,
+                                 is_actual=False,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=pecota_rdc_pitcher_post_processor,
+                                 verbose=verbose)
+
     # ZIPS readers
 
     def read_zips_batters_2011(self, filename, verbose=False):
@@ -345,6 +359,15 @@ class MyProjectionManager(pm.ProjectionManager):
                       'g', 'gs', 'ip', 'h', 'r', 'er', 'hr', 'bb', 'k', 'wp', '', 
                       'hbp']
         self.read_projection_csv(filename, 'zips', 2013, 
+                                 is_actual=False,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+
+    def read_zips_pitchers_2014(self, filename, verbose=False):
+
+        header_row = [ 'full_name', 'w', 'l', 'era', 'g', 'gs', 'ip', 
+                      'h', 'er', 'hr', 'k', 'bb', 'whip', '', '', '', '', 'fg_id'] 
+        self.read_projection_csv(filename, 'zips', 2014, 
                                  is_actual=False,
                                  player_type='pitcher',
                                  header_row=header_row, 
@@ -440,6 +463,17 @@ class MyProjectionManager(pm.ProjectionManager):
                                  player_type='batter',
                                  header_row=header_row, 
                                  post_processor=helper.batter_post_processor,
+                                 verbose=verbose)
+
+    def read_steamer_pitchers_2014(self, filename, verbose=False):
+
+        header_row = [ 'full_name', 'w', 'l', 'era', 'g', 'gs', 'sv','ip', 
+                      'h', 'er', 'hr', 'k', 'bb', 'whip', '', '', '', '', 'fg_id'] 
+        self.read_projection_csv(filename, 'steamer', 2014, 
+                                 is_actual=False,
+                                 player_type='pitcher',
+                                 header_row=header_row, 
+                                 post_processor=helper.pitcher_post_processor,
                                  verbose=verbose)
 
 def register_processor(x):
