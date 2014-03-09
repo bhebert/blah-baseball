@@ -57,7 +57,7 @@ use_gls = True
 filter_rates = False
 min_sample_pts = {'batter':300,'pitcher':40}
 
-use_rookies = True
+use_rookies = False
 use_ages = False
 use_teams = False
 special_winrate = False
